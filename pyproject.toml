@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Llamore"
+description= "Large LAnguage MOdels for Reference Extraction: extract and evaluate references from free-form text using LLM/VLMs."
+readme = "README.md"
+version = "0.0.0"
+requires-python = ">=3.10"
+dependencies = [
+    "google-genai>=1.8.0",
+    "lxml>=5.3.1",
+    "numpy>=2.2.3",
+    "openai>=1.68.2",
+    "pydantic>=2.10.6",
+    "pymupdf>=1.25.4",
+    "rapidfuzz>=3.12.2",
+    "rich>=13.9.4",
+    "scipy>=1.15.2",
+]
+
+[tool.pytest.ini_options]
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=6.29.5",
+    "ipywidgets>=8.1.5",
+    "matplotlib>=3.10.1",
+    "pre-commit>=4.1.0",
+    "pytest>=8.3.5",
+    "pytest-cov>=6.0.0",
+    "python-dotenv>=1.0.1",
+]

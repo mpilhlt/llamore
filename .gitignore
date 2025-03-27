@@ -1,0 +1,21 @@
+.conda
+.venv
+.ipynb_checkpoints
+data/20240715
+.vscode
+.pytest*
+__pycache__
+*.egg-info
+.ruff_cache
+.DS_Store
+.coverage
+build/
+
+# apptainer images
+*.sif
+
+# environment variables
+.env
+
+# playgrounds ...
+*/playground*
