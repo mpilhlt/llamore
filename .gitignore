@@ -10,6 +10,7 @@ __pycache__
 .DS_Store
 .coverage
 build/
+dist/
 
 # apptainer images
 *.sif
