@@ -51,3 +51,6 @@ jobs:
 
             - name: Smoke test (source)
               run: uv run --isolated --no-project -p 3.10 --with dist/*tar.gz -- python -c "import llamore"
+
+            - name: Publish package
+              run: uv publish --index testpypi --trusted-publishing always

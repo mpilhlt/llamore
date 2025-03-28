@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "Llamore"
 description= "Large LAnguage MOdels for Reference Extraction: extract and evaluate references from free-form text using LLM/VLMs."
 readme = "README.md"
-version = "0.0.0"
+version = "0.0.0rc0"
 requires-python = ">=3.10"
 dependencies = [
     "google-genai>=1.8.0",
@@ -35,3 +35,9 @@ dev = [
     "pytest-cov>=6.0.0",
     "python-dotenv>=1.0.1",
 ]
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
