@@ -11,7 +11,7 @@ authors = [
     { name = "Christian Boulanger", email = "boulanger@lhlt.mpg.de" },
     { name = "Andreas Wagner", email = "wagner@lhlt.mpg.de"},
 ]
-version = "0.0.0rc1"
+version = "0.0.0rc2"
 requires-python = ">=3.10"
 dependencies = [
     "google-genai>=1.8.0",
