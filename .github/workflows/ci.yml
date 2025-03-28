@@ -35,6 +35,8 @@ jobs:
         needs: tests
         environment: 
             name: pypi
+        permissions:
+            id-token: write
         steps:
             - uses: actions/checkout@v4
 
