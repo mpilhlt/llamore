@@ -1,5 +1,5 @@
 <h1 align="center">
-  <a href=""><img src="llamore.png" alt="Llamore logo" width="150"></a>
+  <a href=""><img src="llamore.png" alt="Llamore logo" width="140"></a>
   <br>
   Llamore
 </h1>
