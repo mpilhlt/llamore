@@ -19,10 +19,15 @@ A few things you can do with Llamore.
 
 ### Extract references
 
+Define your extractor. You can use the `OpenaiExtractor` for most of the open model serving frameworks like Ollama, vLLM, etc.
 ```python
 from llamore import GeminiExtractor, OpenaiExtractor
 
 extractor = GeminiExtractor(api_key="MY_GEMINI_API_KEY")
+```
+
+Extract references from a PDF or a raw input string.
+```python
 references = extractor(pdf="path/to/my.pdf")
 ```
 or
