@@ -20,3 +20,6 @@ dist/
 
 # playgrounds ...
 */playground*
+
+# exclude data
+data

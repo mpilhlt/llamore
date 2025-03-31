@@ -1,8 +1,11 @@
-# Llamore
+<h1 align="center">
+  <a href=""><img src="llamore.png" alt="Llamore logo" width="210"></a>
+  <br>
+  Llamore
+</h1>
+<p align="center"><b>A framework to extract and evaluate scientific references and citations from free-form text and PDFs using LLM/VLMs.</b></p>
 
-***L**arge **LA**nguage **MO**dels for **R**eference **E**xtraction*
-
-A framework to extract and evaluate scientific references and citations from free-form text and PDFs using LLM/VLMs.
+**Llamore:** ***L**arge **LA**nguage **MO**dels for **R**eference **E**xtraction*
 
 ## Setup
 
