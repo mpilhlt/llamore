@@ -20,7 +20,7 @@ A few things you can do with Llamore.
 ### Extract references
 
 ```python
-from llamore import GeminiExtractor
+from llamore import GeminiExtractor, OpenaiExtractor
 
 extractor = GeminiExtractor(api_key="MY_GEMINI_API_KEY")
 references = extractor(pdf="path/to/my.pdf")
@@ -51,7 +51,7 @@ f1.compute_macro_average(references, gold_references)
 ```
 
 
-You can also have a look into the jupyter notebook at [notebooks/quick_start.ipynb](notebooks/quick_start.ipynb).
+You can also have a look at the [quick start notebook](notebooks/quick_start.ipynb).
 
 ## Reference JSON schema
 
