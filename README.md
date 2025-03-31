@@ -1,8 +1,11 @@
-# Llamore
+<h1 align="center">
+  <a href=""><img src="llamore.png" alt="Llamore logo" width="140"></a>
+  <br>
+  Llamore
+</h1>
+<p align="center"><b>L</b>arge <b>LA</b>nguage <b>MO</b>dels for <b>R</b>eference <b>E</b>xtraction</b></p>
 
-***L**arge **LA**nguage **MO**dels for **R**eference **E**xtraction*
-
-A framework to extract and evaluate scientific references and citations from free-form text and PDFs using LLM/VLMs.
+<p align="center"><b>A framework to extract and evaluate scientific references and citations from free-form text and PDFs using LLM/VLMs.</b></p>
 
 ## Setup
 
@@ -16,10 +19,15 @@ A few things you can do with Llamore.
 
 ### Extract references
 
+Define your extractor. You can use the `OpenaiExtractor` for most of the open model serving frameworks like Ollama, vLLM, etc.
 ```python
-from llamore import GeminiExtractor
+from llamore import GeminiExtractor, OpenaiExtractor
 
 extractor = GeminiExtractor(api_key="MY_GEMINI_API_KEY")
+```
+
+Extract references from a PDF or a raw input string.
+```python
 references = extractor(pdf="path/to/my.pdf")
 ```
 or
@@ -48,7 +56,7 @@ f1.compute_macro_average(references, gold_references)
 ```
 
 
-You can also have a look into the jupyter notebook at [notebooks/quick_start.ipynb](notebooks/quick_start.ipynb).
+You can also have a look at the [quick start notebook](notebooks/quick_start.ipynb).
 
 ## Reference JSON schema
 
