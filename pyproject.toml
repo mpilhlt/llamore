@@ -4,14 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "Llamore"
-description= "Large LAnguage MOdels for Reference Extraction: extract and evaluate references from free-form text using LLM/VLMs."
+description = "Large LAnguage MOdels for Reference Extraction: extract and evaluate references from free-form text using LLM/VLMs."
 readme = "README.md"
 authors = [
     { name = "David Carreto Fidalgo", email = "david.carreto.fidalgo@mpcdf.mpg.de" },
     { name = "Christian Boulanger", email = "boulanger@lhlt.mpg.de" },
     { name = "Andreas Wagner", email = "wagner@lhlt.mpg.de"},
 ]
-version = "0.1.0rc0"
+version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
     "google-genai>=1.8.0",
