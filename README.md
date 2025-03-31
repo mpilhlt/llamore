@@ -1,11 +1,11 @@
 <h1 align="center">
-  <a href=""><img src="llamore.png" alt="Llamore logo" width="210"></a>
+  <a href=""><img src="llamore.png" alt="Llamore logo" width="150"></a>
   <br>
   Llamore
 </h1>
-<p align="center"><b>A framework to extract and evaluate scientific references and citations from free-form text and PDFs using LLM/VLMs.</b></p>
+<p align="center"><b>L</b>arge <b>LA</b>nguage <b>MO</b>dels for <b>R</b>eference <b>E</b>xtraction</b></p>
 
-**Llamore:** ***L**arge **LA**nguage **MO**dels for **R**eference **E**xtraction*
+<p align="center"><b>A framework to extract and evaluate scientific references and citations from free-form text and PDFs using LLM/VLMs.</b></p>
 
 ## Setup
 
