@@ -4,7 +4,7 @@ from typing import List, Tuple
 import numpy as np
 import pytest
 from llamore.metrics import F1, compute_coarse_f1
-from llamore.reference import Person, Reference, Organization
+from llamore.reference import Person, Reference, References, Organization
 
 
 @pytest.fixture
@@ -152,13 +152,16 @@ def test_count_stats_per_field():
     ref = Reference(
         analytic_title="title",
         publication_date="time",
-        authors=[Person(forename="first", surname="last"), Person(forename="first2", surname="last2")],
+        authors=[
+            Person(forename="first", surname="last"),
+            Person(forename="first2", surname="last2"),
+        ],
     )
     gold = Reference(
         analytic_title="title",
         journal_title="jt",
         authors=[Person(forename="first", surname="last0"), Organization(name="org")],
-        publication_place="place"
+        publication_place="place",
     )
 
     stats = F1()._count_stats_per_field(ref, gold)
@@ -168,7 +171,59 @@ def test_count_stats_per_field():
         "Reference.journal_title": {"predictions": 0, "labels": 1, "matches": 0},
         "Reference.publication_date": {"predictions": 1, "labels": 0, "matches": 0},
         "Reference.publication_place": {"predictions": 0, "labels": 1, "matches": 0},
-        "Reference.authors.Person.forename": {"predictions": 2, "labels": 1, "matches": 1},
-        "Reference.authors.Person.surname": {"predictions": 2, "labels": 1, "matches": 0},
-        "Reference.authors.Organization.name": {"predictions": 0, "labels": 1, "matches": 0},
+        "Reference.authors.Person.forename": {
+            "predictions": 2,
+            "labels": 1,
+            "matches": 1,
+        },
+        "Reference.authors.Person.surname": {
+            "predictions": 2,
+            "labels": 1,
+            "matches": 0,
+        },
+        "Reference.authors.Organization.name": {
+            "predictions": 0,
+            "labels": 1,
+            "matches": 0,
+        },
     }
+
+
+def test_compute_micro_average():
+    ref = Reference(
+        analytic_title="a",
+        journal_title="jt",
+        authors=[Person(forename="a", surname="b"), Person(forename="a", surname="d")],
+    )
+    gold = Reference(
+        analytic_title="a",
+        journal_title="jt",
+        authors=[Person(forename="a", surname="d")],
+    )
+    gold = Reference(
+        analytic_title="a",
+        journal_title="jt",
+        authors=[Person(forename="a", surname="b"), Person(forename="a", surname="d")],
+    )
+
+    metrics = F1().compute_micro_average(References([ref]), References([gold]))
+
+    assert metrics == {
+        "micro_average": {"recall": 1.0, "precision": 1.0, "f1": 1.0},
+        "Reference.analytic_title": {"recall": 1.0, "precision": 1.0, "f1": 1.0},
+        "Reference.journal_title": {"recall": 1.0, "precision": 1.0, "f1": 1.0},
+        "Reference.authors.Person.forename": {
+            "recall": 1.0,
+            "precision": 1.0,
+            "f1": 1.0,
+        },
+        "Reference.authors.Person.surname": {
+            "recall": 1.0,
+            "precision": 1.0,
+            "f1": 1.0,
+        },
+    }
+
+    import pandas as pd
+    print(pd.DataFrame(metrics).transpose())
+    assert False
