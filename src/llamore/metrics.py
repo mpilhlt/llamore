@@ -159,6 +159,124 @@ class F1:
 
         return precision_recall_f1(total_matches, n_labels, n_predictions)["f1"]
 
+    def _count_stats_per_field(self, prediction: BaseModel, label: BaseModel) -> Dict[str, Dict[str, int]]:
+        """Count not Nones and matches per field.
+
+        Args:
+            prediction: The predicted reference.
+            label: The gold reference.
+
+        Returns:
+            A dict with the keys: predictions, labels and matches.
+        """
+        stats = {}
+
+        if type(prediction) is not type(label):
+            stats.update(self._count_stats_per_field(prediction, type(prediction)()))
+            stats.update(self._count_stats_per_field(type(label)(), label))
+
+            return stats
+            
+        for field, info in prediction.model_fields.items():
+            if info.exclude:
+                continue
+
+            key = f"{type(prediction).__name__}.{field}"
+            prediction_value = getattr(prediction, field)
+            label_value = getattr(label, field)
+
+            if prediction_value is None and label_value is None:
+                continue
+
+            if isinstance(prediction_value, list) and isinstance(label_value, list):
+                match_matrix = np.zeros((len(prediction_value), len(label_value)), dtype=np.int32)
+                for i, pred in enumerate(prediction_value):
+                    for j, lab in enumerate(label_value):
+                        match_matrix[i, j] = self._count_matches(pred, lab)
+
+                idx = linear_sum_assignment(match_matrix * -1)
+
+                for i, j in zip(*idx):
+                    sub_stats = self._count_stats_per_field(prediction_value[i], label_value[j])
+                    for sub_field, sub_field_stats in sub_stats.items():
+                        if f"{key}.{sub_field}" in stats:
+                            for k, v in sub_field_stats.items():
+                                stats[f"{key}.{sub_field}"][k] += v
+                        else:
+                            stats[f"{key}.{sub_field}"] = sub_field_stats
+
+                for i in set(range(len(prediction_value))).difference(set(idx[0])):
+                    sub_stats = self._count_stats_per_field(prediction_value[i], type(prediction_value[i])())
+                    for sub_field, sub_field_stats in sub_stats.items():
+                        if f"{key}.{sub_field}" in stats:
+                            for k, v in sub_field_stats.items():
+                                stats[f"{key}.{sub_field}"][k] += v
+                        else:
+                            stats[f"{key}.{sub_field}"] = sub_field_stats
+                
+                for j in set(range(len(label_value))).difference(set(idx[1])):
+                    sub_stats = self._count_stats_per_field(type(label_value[j])(), label_value[j])
+                    for sub_field, sub_field_stats in sub_stats.items():
+                        if f"{key}.{sub_field}" in stats:
+                            for k, v in sub_field_stats.items():
+                                stats[f"{key}.{sub_field}"][k] += v
+                        else:
+                            stats[f"{key}.{sub_field}"] = sub_field_stats
+    
+            elif isinstance(prediction_value, list):
+                for pred in prediction_value:
+                    sub_stats = self._count_stats_per_field(pred, type(pred)())
+                    for sub_field, sub_field_stats in sub_stats.items():
+                        if f"{key}.{sub_field}" in stats:
+                            for k, v in sub_field_stats.items():
+                                stats[f"{key}.{sub_field}"][k] += v
+                        else:
+                            stats[f"{key}.{sub_field}"] = sub_field_stats
+
+            elif isinstance(label_value, list):
+                for label in label_value:
+                    sub_stats = self._count_stats_per_field(type(label)(), label)
+                    for sub_field, sub_field_stats in sub_stats.items():
+                        if f"{key}.{sub_field}" in stats:
+                            for k, v in sub_field_stats.items():
+                                stats[f"{key}.{sub_field}"][k] += v
+                        else:
+                            stats[f"{key}.{sub_field}"] = sub_field_stats
+
+            else:
+                stats[key] = {"predictions": 0, "labels": 0, "matches": 0}
+
+                if prediction_value is not None:
+                    stats[key]["predictions"] = 1
+
+                if label_value is not None:
+                    stats[key]["labels"] = 1
+
+                if sum(stats[key].values()) == 2 and prediction_value == label_value:
+                    stats[key]["matches"] = 1
+
+        return stats
+
+    def _count_stats_per_field_in_lists(self, predictions: List, labels: List) -> Dict[str, Dict[str, int]]:
+        match_matrix = np.zeros((len(predictions), len(labels)), dtype=np.int32)
+        for i, pred in enumerate(predictions):
+            for j, lab in enumerate(labels):
+                match_matrix[i, j] = self._count_matches(pred, lab)
+
+        if match_matrix.sum() == 0:
+            return 0
+
+        idx = linear_sum_assignment(match_matrix * -1)
+
+        for i, j in zip(*idx):
+            stats = self._count_stats_per_field(predictions[i], labels[j])
+
+        # if len(predictions) > len(idx):
+
+
+        matches = match_matrix[idx].sum()
+
+
     def _count_matches(
         self,
         prediction: Union[None, str, int, List, BaseModel],

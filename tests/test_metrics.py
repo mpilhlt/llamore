@@ -4,7 +4,7 @@ from typing import List, Tuple
 import numpy as np
 import pytest
 from llamore.metrics import F1, compute_coarse_f1
-from llamore.reference import Person, Reference
+from llamore.reference import Person, Reference, Organization
 
 
 @pytest.fixture
@@ -145,4 +145,30 @@ def test_micro_average():
         "journal_title": {"recall": 0.0, "precision": 0.0, "f1": 0.0},
         "authors.forename": {"recall": 1.0, "precision": 0.5, "f1": 0.5},
         "authors.surname": {"recall": 1.0, "precision": 0.5, "f1": 0.5},
+    }
+
+
+def test_count_stats_per_field():
+    ref = Reference(
+        analytic_title="title",
+        publication_date="time",
+        authors=[Person(forename="first", surname="last"), Person(forename="first2", surname="last2")],
+    )
+    gold = Reference(
+        analytic_title="title",
+        journal_title="jt",
+        authors=[Person(forename="first", surname="last0"), Organization(name="org")],
+        publication_place="place"
+    )
+
+    stats = F1()._count_stats_per_field(ref, gold)
+
+    assert stats == {
+        "Reference.analytic_title": {"predictions": 1, "labels": 1, "matches": 1},
+        "Reference.journal_title": {"predictions": 0, "labels": 1, "matches": 0},
+        "Reference.publication_date": {"predictions": 1, "labels": 0, "matches": 0},
+        "Reference.publication_place": {"predictions": 0, "labels": 1, "matches": 0},
+        "Reference.authors.Person.forename": {"predictions": 2, "labels": 1, "matches": 1},
+        "Reference.authors.Person.surname": {"predictions": 2, "labels": 1, "matches": 0},
+        "Reference.authors.Organization.name": {"predictions": 0, "labels": 1, "matches": 0},
     }
