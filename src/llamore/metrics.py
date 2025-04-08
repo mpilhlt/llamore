@@ -197,7 +197,7 @@ class F1:
             metrics[field] = precision_recall_f1(
                 counts["matches"], counts["labels"], counts["predictions"]
             )
-            
+
         metrics["micro_average"] = precision_recall_f1(
             total_counts["matches"], total_counts["labels"], total_counts["predictions"]
         )
@@ -314,7 +314,7 @@ class F1:
                 if label_value is not None:
                     stats[key]["labels"] = 1
 
-                if sum(stats[key].values()) == 2 and prediction_value == label_value:
+                if sum(stats[key].values()) == 2 and self._is_match(prediction_value, label_value):
                     stats[key]["matches"] = 1
 
         return stats

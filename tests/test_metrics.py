@@ -193,23 +193,50 @@ def test_compute_micro_average():
     ref = Reference(
         analytic_title="a",
         journal_title="jt",
-        authors=[Person(forename="a", surname="b"), Person(forename="a", surname="d")],
+        authors=[Person(forename="a", surname="b"), Person(forename="b")],
     )
+
     gold = Reference(
         analytic_title="a",
-        journal_title="jt",
-        authors=[Person(forename="a", surname="d")],
-    )
-    gold = Reference(
-        analytic_title="a",
-        journal_title="jt",
+        journal_title="jt2",
         authors=[Person(forename="a", surname="b"), Person(forename="a", surname="d")],
     )
+
+    with pytest.raises(ValueError):
+        F1().compute_micro_average([ref], [])
 
     metrics = F1().compute_micro_average(References([ref]), References([gold]))
 
     assert metrics == {
-        "micro_average": {"recall": 1.0, "precision": 1.0, "f1": 1.0},
+        "micro_average": {
+            "recall": 0.5,
+            "precision": 0.6,
+            "f1": (2 * 0.5 * 0.6) / (0.5 + 0.6),
+        },
+        "Reference.analytic_title": {"recall": 1.0, "precision": 1.0, "f1": 1.0},
+        "Reference.journal_title": {"recall": 0.0, "precision": 0.0, "f1": 0.0},
+        "Reference.authors.Person.forename": {
+            "recall": 0.5,
+            "precision": 0.5,
+            "f1": 0.5,
+        },
+        "Reference.authors.Person.surname": {
+            "recall": 0.5,
+            "precision": 1.0,
+            "f1": 2.0 / 3,
+        },
+    }
+
+    metrics = F1(levenshtein_distance=1).compute_micro_average(
+        References([ref]), References([gold])
+    )
+
+    assert metrics == {
+        "micro_average": {
+            "recall": 5.0 / 6,
+            "precision": 1.0,
+            "f1": (2 * 1.0 * (5.0 / 6)) / (1.0 + 5.0 / 6),
+        },
         "Reference.analytic_title": {"recall": 1.0, "precision": 1.0, "f1": 1.0},
         "Reference.journal_title": {"recall": 1.0, "precision": 1.0, "f1": 1.0},
         "Reference.authors.Person.forename": {
@@ -218,12 +245,35 @@ def test_compute_micro_average():
             "f1": 1.0,
         },
         "Reference.authors.Person.surname": {
-            "recall": 1.0,
+            "recall": 0.5,
             "precision": 1.0,
-            "f1": 1.0,
+            "f1": 2.0 / 3,
         },
     }
 
-    import pandas as pd
-    print(pd.DataFrame(metrics).transpose())
-    assert False
+    refs = [
+        References([Reference(analytic_title="at", journal_title="jt")]),
+        References([Reference(analytic_title="at", journal_title="jt")]),
+    ]
+    golds = [
+        References(
+            [
+                Reference(analytic_title="at", journal_title="jt"),
+                Reference(monographic_title="mt"),
+            ]
+        ),
+        References([Reference(analytic_title="at", journal_title="jt")]),
+    ]
+
+    metrics = F1().compute_micro_average(refs, golds)
+
+    assert metrics == {
+        "micro_average": {
+            "recall": 4./5,
+            "precision": 1.0,
+            "f1": (2 * 4./5) / (1.0 + 4./5),
+        },
+        "Reference.analytic_title": {"recall": 1.0, "precision": 1.0, "f1": 1.0},
+        "Reference.journal_title": {"recall": 1.0, "precision": 1.0, "f1": 1.0},
+        "Reference.monographic_title": {"recall": 0.0, "precision": 0.0, "f1": 0.0},
+    }
