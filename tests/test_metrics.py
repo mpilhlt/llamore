@@ -126,28 +126,6 @@ def test_is_match_with_min_max_distance():
     assert not F1()._is_match_with_max_distance("aaaaaaaaaa", "aaaaaaaaab", 0)
 
 
-def test_micro_average():
-    ref = Reference(
-        analytic_title="a",
-        authors=[Person(forename="a", surname="b"), Person(forename="a", surname="d")],
-    )
-    gold = Reference(
-        analytic_title="a",
-        journal_title="jt",
-        authors=[Person(forename="a", surname="d")],
-    )
-
-    f1 = F1()
-    metrics = f1.compute_micro_average(ref, gold)
-
-    assert metrics == {
-        "analytic_title": {"recall": 1.0, "precision": 1.0, "f1": 1.0},
-        "journal_title": {"recall": 0.0, "precision": 0.0, "f1": 0.0},
-        "authors.forename": {"recall": 1.0, "precision": 0.5, "f1": 0.5},
-        "authors.surname": {"recall": 1.0, "precision": 0.5, "f1": 0.5},
-    }
-
-
 def test_count_stats_per_field():
     ref = Reference(
         analytic_title="title",

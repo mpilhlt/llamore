@@ -332,8 +332,7 @@ class F1:
             new_stats: The new stats.
             base_key: The base key to add the new stats to.
         """
-        if base_key != "":
-            base_key = f"{base_key}."
+        base_key += "." if base_key else ""
 
         for sub_field, sub_field_stats in new_stats.items():
             key = f"{base_key}{sub_field}"
