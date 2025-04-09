@@ -173,9 +173,9 @@ class F1:
         Returns:
             A dictionary containing the micro averaged f1 scores.
         """
-        if type(predictions) is References:
+        if isinstance(predictions, References):
             predictions = [predictions]
-        if type(labels) is References:
+        if isinstance(labels, References):
             labels = [labels]
 
         if len(predictions) != len(labels):
@@ -207,7 +207,7 @@ class F1:
     def _compute_stats_per_field(
         self, predictions: References, labels: References
     ) -> Dict[str, Dict[str, int]]:
-        """Compute the count statisitcs per field."""
+        """Compute the count statistics per field."""
         stats = {}
 
         f1_matrix = np.zeros((len(predictions), len(labels)))
@@ -237,7 +237,7 @@ class F1:
     def _count_stats_per_field(
         self, prediction: BaseModel, label: BaseModel
     ) -> Dict[str, Dict[str, int]]:
-        """Count not Nones and matches per field.
+        """Count non-Nones and matches per field.
 
         Args:
             prediction: The predicted reference.
