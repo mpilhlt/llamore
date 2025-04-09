@@ -236,6 +236,17 @@ class Reference(BaseModel):
         None,
         description="Defines the range of cited content, often represented by pages or other units.",
     )
+    footnote_number: Optional[
+        Annotated[
+            str,
+            BeforeValidator(to_str),
+            AfterValidator(empty_to_none),
+            AfterValidator(normalize),
+        ]
+    ] = Field(
+        None,
+        description="Contains the number of the footnote in which the reference occurs.",
+    )
     refs: Optional[
         Annotated[
             str,
