@@ -65,6 +65,7 @@ def test_to_from_xml(tmp_path_factory):
         pages="666",
         cited_range="666-9",
         volume="42",
+        footnote_number="43"
     )
     reader = TeiBiblStruct()
 
