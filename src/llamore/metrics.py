@@ -159,6 +159,191 @@ class F1:
 
         return precision_recall_f1(total_matches, n_labels, n_predictions)["f1"]
 
+    def compute_micro_average(
+        self,
+        predictions: Union[References, List[References]],
+        labels: Union[References, List[References]],
+    ) -> Dict[str, Dict[str, float]]:
+        """Compute the micro averaged f1 score, as well as the f1 scores for each field.
+
+        Args:
+            predictions: The predicted references.
+            labels: The ground truth references.
+
+        Returns:
+            A dictionary containing the micro averaged f1 scores.
+        """
+        if isinstance(predictions, References):
+            predictions = [predictions]
+        if isinstance(labels, References):
+            labels = [labels]
+
+        if len(predictions) != len(labels):
+            raise ValueError(
+                f"`predictions` and `labels` must have the same length: {len(predictions)} vs. {len(labels)}"
+            )
+
+        stats = {}
+        for preds, labs in zip(predictions, labels):
+            sub_stats = self._compute_stats_per_field(preds, labs)
+            self._update_stats(stats, sub_stats)
+
+        # compute the micro average
+        metrics = {}
+        total_counts = {"predictions": 0, "labels": 0, "matches": 0}
+        for field, counts in stats.items():
+            for k, v in counts.items():
+                total_counts[k] += v
+            metrics[field] = precision_recall_f1(
+                counts["matches"], counts["labels"], counts["predictions"]
+            )
+
+        metrics["micro_average"] = precision_recall_f1(
+            total_counts["matches"], total_counts["labels"], total_counts["predictions"]
+        )
+
+        return metrics
+
+    def _compute_stats_per_field(
+        self, predictions: References, labels: References
+    ) -> Dict[str, Dict[str, int]]:
+        """Compute the count statistics per field."""
+        stats = {}
+
+        f1_matrix = np.zeros((len(predictions), len(labels)))
+        for i, pred in enumerate(predictions):
+            for j, lab in enumerate(labels):
+                f1_matrix[i, j] = self._compute_f1(pred, lab)
+
+        idx = linear_sum_assignment(f1_matrix * -1)
+        for i, j in zip(*idx):
+            sub_stats = self._count_stats_per_field(predictions[i], labels[j])
+            self._update_stats(stats, sub_stats)
+
+        # add stats for hallucinated refs
+        for i in set(range(len(predictions))).difference(set(idx[0])):
+            sub_stats = self._count_stats_per_field(
+                predictions[i], type(predictions[i])()
+            )
+            self._update_stats(stats, sub_stats)
+
+        # add stats for missing refs
+        for j in set(range(len(labels))).difference(set(idx[1])):
+            sub_stats = self._count_stats_per_field(type(labels[j])(), labels[j])
+            self._update_stats(stats, sub_stats)
+
+        return stats
+
+    def _count_stats_per_field(
+        self, prediction: BaseModel, label: BaseModel
+    ) -> Dict[str, Dict[str, int]]:
+        """Count non-Nones and matches per field.
+
+        Args:
+            prediction: The predicted reference.
+            label: The gold reference.
+
+        Returns:
+            A dict with the keys: predictions, labels and matches.
+        """
+        stats = {}
+
+        if type(prediction) is not type(label):
+            stats.update(self._count_stats_per_field(prediction, type(prediction)()))
+            stats.update(self._count_stats_per_field(type(label)(), label))
+
+            return stats
+
+        for field, info in prediction.model_fields.items():
+            if info.exclude:
+                continue
+
+            key = f"{type(prediction).__name__}.{field}"
+            prediction_value = getattr(prediction, field)
+            label_value = getattr(label, field)
+
+            if prediction_value is None and label_value is None:
+                continue
+
+            if isinstance(prediction_value, list) and isinstance(label_value, list):
+                match_matrix = np.zeros(
+                    (len(prediction_value), len(label_value)), dtype=np.int32
+                )
+                for i, pred in enumerate(prediction_value):
+                    for j, lab in enumerate(label_value):
+                        match_matrix[i, j] = self._count_matches(pred, lab)
+
+                idx = linear_sum_assignment(match_matrix * -1)
+
+                for i, j in zip(*idx):
+                    sub_stats = self._count_stats_per_field(
+                        prediction_value[i], label_value[j]
+                    )
+                    self._update_stats(stats, sub_stats, key)
+
+                # add stats for hallucinated info
+                for i in set(range(len(prediction_value))).difference(set(idx[0])):
+                    sub_stats = self._count_stats_per_field(
+                        prediction_value[i], type(prediction_value[i])()
+                    )
+                    self._update_stats(stats, sub_stats, key)
+
+                # add stats for missing info
+                for j in set(range(len(label_value))).difference(set(idx[1])):
+                    sub_stats = self._count_stats_per_field(
+                        type(label_value[j])(), label_value[j]
+                    )
+                    self._update_stats(stats, sub_stats, key)
+
+            elif isinstance(prediction_value, list):
+                for pred in prediction_value:
+                    sub_stats = self._count_stats_per_field(pred, type(pred)())
+                    self._update_stats(stats, sub_stats, key)
+
+            elif isinstance(label_value, list):
+                for label in label_value:
+                    sub_stats = self._count_stats_per_field(type(label)(), label)
+                    self._update_stats(stats, sub_stats, key)
+
+            else:
+                stats[key] = {"predictions": 0, "labels": 0, "matches": 0}
+
+                if prediction_value is not None:
+                    stats[key]["predictions"] = 1
+
+                if label_value is not None:
+                    stats[key]["labels"] = 1
+
+                if sum(stats[key].values()) == 2 and self._is_match(prediction_value, label_value):
+                    stats[key]["matches"] = 1
+
+        return stats
+
+    @staticmethod
+    def _update_stats(
+        stats: Dict[str, Dict[str, int]],
+        new_stats: Dict[str, Dict[str, int]],
+        base_key: str = "",
+    ):
+        """Add the new stats to the stats.
+
+        Args:
+            stats: The total stats.
+            new_stats: The new stats.
+            base_key: The base key to add the new stats to.
+        """
+        base_key += "." if base_key else ""
+
+        for sub_field, sub_field_stats in new_stats.items():
+            key = f"{base_key}{sub_field}"
+            if key in stats:
+                for k, v in sub_field_stats.items():
+                    stats[key][k] += v
+            else:
+                stats[key] = sub_field_stats
+
+        return stats
+
     def _count_matches(
         self,
         prediction: Union[None, str, int, List, BaseModel],

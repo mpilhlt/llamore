@@ -51,8 +51,11 @@ references.to_xml("./my_references.xml")
 ```python
 from llamore import F1
 
-f1 = F1()
+f1 = F1(levenshtein_distance=0.9)
+
 f1.compute_macro_average(references, gold_references)
+# or compute metrics per field
+f1.compute_micro_average(references, gold_references)
 ```
 
 

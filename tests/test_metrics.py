@@ -4,7 +4,7 @@ from typing import List, Tuple
 import numpy as np
 import pytest
 from llamore.metrics import F1, compute_coarse_f1
-from llamore.reference import Person, Reference
+from llamore.reference import Person, Reference, References, Organization
 
 
 @pytest.fixture
@@ -124,3 +124,134 @@ def test_is_match_with_min_max_distance():
 
     assert F1()._is_match_with_max_distance("aaaaaaaaaa", "aaaaaaaabb", 2)
     assert not F1()._is_match_with_max_distance("aaaaaaaaaa", "aaaaaaaaab", 0)
+
+
+def test_count_stats_per_field():
+    ref = Reference(
+        analytic_title="title",
+        publication_date="time",
+        authors=[
+            Person(forename="first", surname="last"),
+            Person(forename="first2", surname="last2"),
+        ],
+    )
+    gold = Reference(
+        analytic_title="title",
+        journal_title="jt",
+        authors=[Person(forename="first", surname="last0"), Organization(name="org")],
+        publication_place="place",
+    )
+
+    stats = F1()._count_stats_per_field(ref, gold)
+
+    assert stats == {
+        "Reference.analytic_title": {"predictions": 1, "labels": 1, "matches": 1},
+        "Reference.journal_title": {"predictions": 0, "labels": 1, "matches": 0},
+        "Reference.publication_date": {"predictions": 1, "labels": 0, "matches": 0},
+        "Reference.publication_place": {"predictions": 0, "labels": 1, "matches": 0},
+        "Reference.authors.Person.forename": {
+            "predictions": 2,
+            "labels": 1,
+            "matches": 1,
+        },
+        "Reference.authors.Person.surname": {
+            "predictions": 2,
+            "labels": 1,
+            "matches": 0,
+        },
+        "Reference.authors.Organization.name": {
+            "predictions": 0,
+            "labels": 1,
+            "matches": 0,
+        },
+    }
+
+
+def test_compute_micro_average():
+    ref = Reference(
+        analytic_title="a",
+        journal_title="jt",
+        authors=[Person(forename="a", surname="b"), Person(forename="b")],
+    )
+
+    gold = Reference(
+        analytic_title="a",
+        journal_title="jt2",
+        authors=[Person(forename="a", surname="b"), Person(forename="a", surname="d")],
+    )
+
+    with pytest.raises(ValueError):
+        F1().compute_micro_average([ref], [])
+
+    metrics = F1().compute_micro_average(References([ref]), References([gold]))
+
+    assert metrics == {
+        "micro_average": {
+            "recall": 0.5,
+            "precision": 0.6,
+            "f1": (2 * 0.5 * 0.6) / (0.5 + 0.6),
+        },
+        "Reference.analytic_title": {"recall": 1.0, "precision": 1.0, "f1": 1.0},
+        "Reference.journal_title": {"recall": 0.0, "precision": 0.0, "f1": 0.0},
+        "Reference.authors.Person.forename": {
+            "recall": 0.5,
+            "precision": 0.5,
+            "f1": 0.5,
+        },
+        "Reference.authors.Person.surname": {
+            "recall": 0.5,
+            "precision": 1.0,
+            "f1": 2.0 / 3,
+        },
+    }
+
+    metrics = F1(levenshtein_distance=1).compute_micro_average(
+        References([ref]), References([gold])
+    )
+
+    assert metrics == {
+        "micro_average": {
+            "recall": 5.0 / 6,
+            "precision": 1.0,
+            "f1": (2 * 1.0 * (5.0 / 6)) / (1.0 + 5.0 / 6),
+        },
+        "Reference.analytic_title": {"recall": 1.0, "precision": 1.0, "f1": 1.0},
+        "Reference.journal_title": {"recall": 1.0, "precision": 1.0, "f1": 1.0},
+        "Reference.authors.Person.forename": {
+            "recall": 1.0,
+            "precision": 1.0,
+            "f1": 1.0,
+        },
+        "Reference.authors.Person.surname": {
+            "recall": 0.5,
+            "precision": 1.0,
+            "f1": 2.0 / 3,
+        },
+    }
+
+    refs = [
+        References([Reference(analytic_title="at", journal_title="jt")]),
+        References([Reference(analytic_title="at", journal_title="jt")]),
+    ]
+    golds = [
+        References(
+            [
+                Reference(analytic_title="at", journal_title="jt"),
+                Reference(monographic_title="mt"),
+            ]
+        ),
+        References([Reference(analytic_title="at", journal_title="jt")]),
+    ]
+
+    metrics = F1().compute_micro_average(refs, golds)
+
+    assert metrics == {
+        "micro_average": {
+            "recall": 4./5,
+            "precision": 1.0,
+            "f1": (2 * 4./5) / (1.0 + 4./5),
+        },
+        "Reference.analytic_title": {"recall": 1.0, "precision": 1.0, "f1": 1.0},
+        "Reference.journal_title": {"recall": 1.0, "precision": 1.0, "f1": 1.0},
+        "Reference.monographic_title": {"recall": 0.0, "precision": 0.0, "f1": 0.0},
+    }
