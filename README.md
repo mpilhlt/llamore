@@ -272,7 +272,7 @@ It is based on the TEI biblStruct model and its JSON schema is the following:
         }
       ],
       "default": null,
-      "description": "Contains an issue number, or issue numbers.",
+      "description": "Defines the scope of a bibliographic reference in terms of an issue number, or issue numbers.",
       "title": "Issue"
     },
     "pages": {
@@ -300,6 +300,19 @@ It is based on the TEI biblStruct model and its JSON schema is the following:
       "default": null,
       "description": "Defines the range of cited content, often represented by pages or other units.",
       "title": "Cited Range"
+    },
+    "footnote_number": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Contains the number of the footnote in which the reference occurs.",
+      "title": "Footnote Number"
     },
     "refs": {
       "anyOf": [

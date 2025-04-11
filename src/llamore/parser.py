@@ -90,6 +90,8 @@ class TeiBiblStruct:
 
         publication_place = self._find_all_and_join_text(bibl_struct, ".//pubPlace")
 
+        footnote_number = bibl_struct.attrib.get("source", "")[2:]
+
         refs = self._find_and_join_all_refs(bibl_struct)
 
         reference = Reference(
@@ -105,6 +107,7 @@ class TeiBiblStruct:
             issue=issue,
             pages=pages,
             cited_range=cited_range,
+            footnote_number=footnote_number,
             refs=refs,
         )
         if reference == Reference():
@@ -296,7 +299,12 @@ class TeiBiblStruct:
             list_bibl = etree.SubElement(root, "listBibl")
             for reference in reference_list:
                 bibl_struct = etree.SubElement(
-                    list_bibl, "biblStruct", nsmap=self._namespaces
+                    list_bibl,
+                    "biblStruct",
+                    attrib={"source": f"fn{reference.footnote_number}"}
+                    if reference.footnote_number
+                    else None,
+                    nsmap=self._namespaces,
                 )
                 analytic, monogr = None, None
                 if reference.analytic_title:
