@@ -139,6 +139,7 @@ def test_count_stats_per_field():
         analytic_title="title",
         journal_title="jt",
         authors=[Person(forename="first", surname="last0"), Organization(name="org")],
+        editors=[Person(forename="first", surname="last")],
         publication_place="place",
     )
 
@@ -160,6 +161,16 @@ def test_count_stats_per_field():
             "matches": 0,
         },
         "Reference.authors.Organization.name": {
+            "predictions": 0,
+            "labels": 1,
+            "matches": 0,
+        },
+        "Reference.editors.Person.forename": {
+            "predictions": 0,
+            "labels": 1,
+            "matches": 0,
+        },
+        "Reference.editors.Person.surname": {
             "predictions": 0,
             "labels": 1,
             "matches": 0,

@@ -163,12 +163,14 @@ class F1:
         self,
         predictions: Union[References, List[References]],
         labels: Union[References, List[References]],
+        show_progress: bool = True,
     ) -> Dict[str, Dict[str, float]]:
         """Compute the micro averaged f1 score, as well as the f1 scores for each field.
 
         Args:
             predictions: The predicted references.
             labels: The ground truth references.
+            show_progress: Whether to show a progress bar.
 
         Returns:
             A dictionary containing the micro averaged f1 scores.
@@ -184,7 +186,7 @@ class F1:
             )
 
         stats = {}
-        for preds, labs in zip(predictions, labels):
+        for preds, labs in track(zip(predictions, labels), total=len(predictions), disable=not show_progress):
             sub_stats = self._compute_stats_per_field(preds, labs)
             self._update_stats(stats, sub_stats)
 
@@ -246,6 +248,7 @@ class F1:
         Returns:
             A dict with the keys: predictions, labels and matches.
         """
+        # TODO: This needs some refactoring!!!
         stats = {}
 
         if type(prediction) is not type(label):
@@ -301,8 +304,8 @@ class F1:
                     self._update_stats(stats, sub_stats, key)
 
             elif isinstance(label_value, list):
-                for label in label_value:
-                    sub_stats = self._count_stats_per_field(type(label)(), label)
+                for lab in label_value:
+                    sub_stats = self._count_stats_per_field(type(lab)(), lab)
                     self._update_stats(stats, sub_stats, key)
 
             else:
