@@ -60,8 +60,7 @@ class LineByLinePrompter:
     def user_prompt(self, text: Optional[str] = None, additional_instructions: Optional[str] = None) -> str:
         """The user prompt. The prompt is composed of different parts:
             - a processing instruction (see processing_instruction_prompt()) for input and goal of extraction,
-            - an output formmatting instruction (see output_instruction_prompt()) for the output format
-            - optional additional instructions
+            - an output formatting instruction (see output_instruction_prompt()) for the output format
             - the text from which references should be extracted, if any, otherwise a PDF input is assumed
 
         Args:
