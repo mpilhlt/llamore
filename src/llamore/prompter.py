@@ -29,26 +29,54 @@ class LineByLinePrompter:
             "You help the user to extract citation data from scientific works."
         )
 
-    def user_prompt(self, text: Optional[str] = None) -> str:
-        """The user prompt.
+
+    def _processing_instruction_prompt(self, text: Optional[str] = None) -> str:
+        """
+        The part of the user prompt that instructs the model what input it receives 
+        and what it should extract from it. Instructions on in what format the 
+        extracted information should be returned are provided by output_instruction_prompt()
 
         Args:
-            text: The input text from which to extract the references.
-                If None, we assume we are extracting references from a PDF.
-
-        Returns:
-            The prompt for the user role.
+            text: The input text from which to extract the references. If None,
+                the prompt instructs to extract references from a PDF. The text is **not**
+                added to the prompt here, this is part of user_prompt()
         """
-        prompt = (
-            f"Extract all references from the given {'text' if text else 'PDF'}. "
+
+        return f"Extract all references from the given {'text' if text else 'PDF'}. "
+
+
+    def _output_instruction_prompt(self) -> str:
+        """
+        The part of the prompt that instructs the model in what format to return the extracted
+        information.
+        """
+        return (   
             "Output the references in JSON format with following schema:"
             f"\n\n{self._json_schema}\n\n"
             "Output the references as JSON formatted strings, each reference in a new line. "
             "Only output the JSON strings, nothing else. Don't use markdown."
         )
 
-        if text:
-            prompt += f"\n\nTEXT: <<<{text}>>>"
+    def user_prompt(self, text: Optional[str] = None, additional_instructions: Optional[str] = None) -> str:
+        """The user prompt. The prompt is composed of different parts:
+            - a processing instruction (see processing_instruction_prompt()) for input and goal of extraction,
+            - an output formatting instruction (see output_instruction_prompt()) for the output format
+            - the text from which references should be extracted, if any, otherwise a PDF input is assumed
+
+        Args:
+            text: The input text from which to extract the references. If None,
+                we assume you are extracting references from a PDF.
+            additional_instructions: any additional instructions for prompt optimization
+
+        Returns:
+            The prompt for the user role.
+        """
+        prompt = "\n".join([
+            self._processing_instruction_prompt(text),
+            self._output_instruction_prompt(), 
+            additional_instructions or "",
+            f"\n\nTEXT: <<<{text}>>>" if text else ""
+        ]).strip()
 
         return prompt
 
