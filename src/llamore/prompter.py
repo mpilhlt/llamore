@@ -30,7 +30,7 @@ class LineByLinePrompter:
         )
 
 
-    def processing_instruction_prompt(self, text: Optional[str] = None) -> str:
+    def _processing_instruction_prompt(self, text: Optional[str] = None) -> str:
         """
         The part of the user prompt that instructs the model what input it receives 
         and what it should extract from it. Instructions on in what format the 
@@ -45,7 +45,7 @@ class LineByLinePrompter:
         return f"Extract all references from the given {'text' if text else 'PDF'}. "
 
 
-    def output_instruction_prompt(self) -> str:
+    def _output_instruction_prompt(self) -> str:
         """
         The part of the prompt that instructs the model in what format to return the extracted
         information.
@@ -72,8 +72,8 @@ class LineByLinePrompter:
             The prompt for the user role.
         """
         prompt = "\n".join([
-            self.processing_instruction_prompt(text),
-            self.output_instruction_prompt(), 
+            self._processing_instruction_prompt(text),
+            self._output_instruction_prompt(), 
             additional_instructions or "",
             f"\n\nTEXT: <<<{text}>>>" if text else ""
         ]).strip()
