@@ -344,11 +344,11 @@ class TeiBiblStruct:
                     publisher = etree.SubElement(imprint, "publisher")
                     publisher.text = reference.publisher
 
-                if reference.publication_date:
-                    monogr = self._get_or_add_subelement(bibl_struct, "monogr")
-                    imprint = self._get_or_add_subelement(monogr, "imprint")
-                    date = etree.SubElement(imprint, "date")
-                    date.text = reference.publication_date
+                # <imprint><date/><imprint> is mandatory
+                monogr = self._get_or_add_subelement(bibl_struct, "monogr")
+                imprint = self._get_or_add_subelement(monogr, "imprint")
+                date = etree.SubElement(imprint, "date")
+                date.text = reference.publication_date or ""
 
                 if reference.publication_place:
                     monogr = self._get_or_add_subelement(bibl_struct, "monogr")
