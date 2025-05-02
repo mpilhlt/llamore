@@ -80,7 +80,7 @@ class OpenaiExtractor:
         else:
             messages = self._messages_for_text(text)
 
-        _LOGGER.debug(f"Prompt: {messages}")
+        _LOGGER.debug(f"MESSAGES: {messages}")
 
         if self._endpoint == "create":
             references = self._call_create_endpoint(messages, **kwargs)
@@ -164,7 +164,7 @@ class OpenaiExtractor:
         output = self._client.chat.completions.create(
             model=self._model, messages=messages, **kwargs
         )
-        _LOGGER.debug(f"Output: {output}")
+        _LOGGER.debug(f"OUTPUT: {output}")
 
         references = self._prompter.parse(output.choices[0].message.content)
 
@@ -182,6 +182,8 @@ class OpenaiExtractor:
         output = self._client.beta.chat.completions.parse(
             model=self._model, messages=messages, **kwargs
         )
+        _LOGGER.debug(f"OUTPUT: {output}")
+
         try:
             references = output.choices[0].message.parsed.references
         except Exception as e:
@@ -189,7 +191,7 @@ class OpenaiExtractor:
             references = []
 
         if output.choices[0].message.refusal:
-            _LOGGER.debug(f"Refusal: {output.choices[0].message.refusal}")
+            _LOGGER.debug(f"REFUSAL: {output.choices[0].message.refusal}")
 
         return References(references)
 
@@ -257,12 +259,15 @@ class GeminiExtractor:
         #     # "response_mime_type": "application/json",
         #     # "response_schema": prompter.schema_model
         # }
+        _LOGGER.debug(f"CONTENTS: {contents}")
 
         response = self._client.models.generate_content(
             model=self._model,
             contents=contents,
             config=config,
         )
+
+        _LOGGER.debug(f"RESPONSE: {response}")
         references = self._prompter.parse(response.text)
 
         return references
