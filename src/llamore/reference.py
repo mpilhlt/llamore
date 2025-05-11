@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Annotated, Any, Dict, List, Optional
 
-from pydantic import AfterValidator, BaseModel, BeforeValidator, Field
+from pydantic import AfterValidator, BaseModel, BeforeValidator, Field, model_validator
 
 
 def to_str(value: Any) -> str:
@@ -259,6 +259,20 @@ class Reference(BaseModel):
         description="Defines references to another location, possibly modified by additional text or comment. ",
         exclude=True,  # This means that for now it is excluded from the prompt and the evaluation (and the built-in serialization)!
     )
+
+    @model_validator(mode="after")
+    def _avoid_empty_monograph_title(self) -> "Reference":
+        """TEI biblStructs require a monograph title."""
+        if self.monographic_title or self.journal_title:
+            return self
+
+        if self.analytic_title:
+            self.monographic_title = self.analytic_title
+            self.analytic_title = None
+        else:
+            raise ValueError("The reference must have a title!")
+        
+        return self
 
 
 class References(list):
