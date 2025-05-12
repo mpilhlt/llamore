@@ -179,6 +179,8 @@ class TeiBiblStruct:
             middle_name = self._find_all_and_join_text(
                 person, "forename[@type='middle']"
             )
+            if first_name is None and middle_name is None:
+                first_name = self._find_all_and_join_text(person, "forename")
             surname = self._find_all_and_join_text(person, "surname")
             name_link = self._find_all_and_join_text(person, "nameLink")
             role_name = self._find_all_and_join_text(person, "roleName")
@@ -191,6 +193,8 @@ class TeiBiblStruct:
             middle_name = self._find_all_and_join_text(
                 authedit, "forename[@type='middle']"
             )
+            if first_name is None and middle_name is None:
+                first_name = self._find_all_and_join_text(authedit, "forename")
             surname = self._find_all_and_join_text(authedit, "surname")
             name_link = self._find_all_and_join_text(authedit, "nameLink")
             role_name = self._find_all_and_join_text(authedit, "roleName")
