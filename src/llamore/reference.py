@@ -262,16 +262,18 @@ class Reference(BaseModel):
 
     @model_validator(mode="after")
     def _avoid_empty_monograph_title(self) -> "Reference":
-        """TEI biblStructs require a monograph title."""
-        if self.monographic_title or self.journal_title:
-            return self
+        """TEI biblStructs require a monograph title.
 
-        if self.analytic_title:
+        We make the life easier for the extraction model by moving the analytic title if necessary.
+        """
+        if (
+            self.monographic_title is None
+            and self.journal_title is None
+            and self.analytic_title is not None
+        ):
             self.monographic_title = self.analytic_title
             self.analytic_title = None
-        else:
-            raise ValueError("The reference must have a title!")
-        
+
         return self
 
 
