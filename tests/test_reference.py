@@ -42,10 +42,6 @@ def test_date(inp, out):
     assert c.publication_date == out
 
 
-def test_references(tmpdir_factory):
-    pass
-
-
 def test_references_to_xml(tmpdir_factory):
     references = References(
         [
@@ -135,3 +131,15 @@ def test_references_from_xml():
     assert ref2.authors[0].name == "Some Organization"
     assert ref2.publisher == "Publisher Name"
     assert ref2.publication_date == "2022"
+
+
+def test_reference_title():
+    ref = Reference(monographic_title="test")
+    assert ref.monographic_title == "test"
+
+    ref = Reference(journal_title="test")
+    assert ref.journal_title == "test"
+
+    ref = Reference(analytic_title="test")
+    assert ref.analytic_title is None
+    assert ref.monographic_title == "test"

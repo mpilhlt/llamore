@@ -128,7 +128,7 @@ def test_is_match_with_min_max_distance():
 
 def test_count_stats_per_field():
     ref = Reference(
-        analytic_title="title",
+        monographic_title="title",
         publication_date="time",
         authors=[
             Person(forename="first", surname="last"),
@@ -136,7 +136,7 @@ def test_count_stats_per_field():
         ],
     )
     gold = Reference(
-        analytic_title="title",
+        monographic_title="title",
         journal_title="jt",
         authors=[Person(forename="first", surname="last0"), Organization(name="org")],
         editors=[Person(forename="first", surname="last")],
@@ -146,7 +146,7 @@ def test_count_stats_per_field():
     stats = F1()._count_stats_per_field(ref, gold)
 
     assert stats == {
-        "Reference.analytic_title": {"predictions": 1, "labels": 1, "matches": 1},
+        "Reference.monographic_title": {"predictions": 1, "labels": 1, "matches": 1},
         "Reference.journal_title": {"predictions": 0, "labels": 1, "matches": 0},
         "Reference.publication_date": {"predictions": 1, "labels": 0, "matches": 0},
         "Reference.publication_place": {"predictions": 0, "labels": 1, "matches": 0},
