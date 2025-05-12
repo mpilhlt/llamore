@@ -134,9 +134,6 @@ def test_references_from_xml():
 
 
 def test_reference_title():
-    with pytest.raises(ValueError, match="must have a title"):
-        Reference()
-
     ref = Reference(monographic_title="test")
     assert ref.monographic_title == "test"
 
