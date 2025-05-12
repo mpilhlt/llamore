@@ -7,6 +7,7 @@ from lxml.etree import Element, SubElement, _Element
 @pytest.mark.skip("Wait for the new gold data to be commited")
 def test_read_gold_data(pytestconfig):
     from notebooks.utils import read_gold_data
+
     xml_path = pytestconfig.rootpath / "data" / "gold" / "10.1111_1467-6478.00057.xml"
 
     input_texts, references, labels_raw = read_gold_data(xml_path)
@@ -20,9 +21,9 @@ def test_read_gold_data(pytestconfig):
 
     reference = references[0][0]
     assert reference.analytic_title == "Citizenship and Feminist Politics"
-    assert reference.authors == [Person(forename="A.", surname="Phillips")]
+    assert reference.authors == [Person(first_name="A.", surname="Phillips")]
     assert reference.monographic_title == "Citizenship"
-    assert reference.editors == [Person(forename="G.", surname="Andrews")]
+    assert reference.editors == [Person(first_name="G.", surname="Andrews")]
     assert reference.journal_title is None
     assert reference.publication_date == "1991"
 
@@ -32,8 +33,8 @@ def test_read_gold_data(pytestconfig):
         == "“Mere Auxiliaries to the Commonwealth”: Women and the Origins of Liberalism"
     )
     assert reference.authors == [
-        Person(forename="T.", surname="Brennan"),
-        Person(forename="C.", surname="Pateman"),
+        Person(first_name="T.", surname="Brennan"),
+        Person(first_name="C.", surname="Pateman"),
     ]
     assert reference.monographic_title is None
     assert reference.editors is None
@@ -57,15 +58,23 @@ def test_to_from_xml(tmp_path_factory):
         analytic_title="at",
         monographic_title="mt",
         journal_title="jt",
-        authors=[Person(forename="fn", surname="sn")],
-        editors=[Person(forename="a"), Person(forename="b", surname="b2")],
+        authors=[
+            Person(
+                first_name="fn",
+                middle_name="md",
+                name_link="nl",
+                role_name="rl",
+                surname="sn",
+            )
+        ],
+        editors=[Person(first_name="a"), Person(first_name="b", surname="b2")],
         publication_date="1978",
         publication_place="Moon",
         publisher="Mann im Mond",
         pages="666",
         cited_range="666-9",
         volume="42",
-        footnote_number="43"
+        footnote_number="43",
     )
     reader = TeiBiblStruct()
 
@@ -99,7 +108,7 @@ class TestFindPersonsAndOrganizations:
 
         assert parser._find_persons_and_organizations(
             authitor.getparent(), author_or_editor=authitor.tag
-        ) == [Person(forename="John", surname="Wayne")]
+        ) == [Person(first_name="John", surname="Wayne")]
 
     def test_raw(self, parser: TeiBiblStruct, authitor: _Element):
         authitor.text = "John Wayne"
@@ -116,7 +125,7 @@ class TestFindPersonsAndOrganizations:
 
         assert parser._find_persons_and_organizations(
             authitor.getparent(), author_or_editor=authitor.tag
-        ) == [Person(forename="John", surname="Wayne")]
+        ) == [Person(first_name="John", surname="Wayne")]
 
     def test_organization(self, parser: TeiBiblStruct, authitor: _Element):
         orgName = SubElement(authitor, "orgName")

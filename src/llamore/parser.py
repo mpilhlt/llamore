@@ -165,22 +165,48 @@ class TeiBiblStruct:
         return persons_and_organizations
 
     def _find_person(self, authedit: etree._Element) -> Optional[Person]:
-        forename, surname = None, None
+        first_name, middle_name, surname, name_link, role_name = (
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
 
         person = authedit.find("persName", namespaces=self._namespaces)
         if person is not None:
-            forename = self._find_all_and_join_text(person, "forename")
+            first_name = self._find_all_and_join_text(person, "forename[@type='first']")
+            middle_name = self._find_all_and_join_text(
+                person, "forename[@type='middle']"
+            )
             surname = self._find_all_and_join_text(person, "surname")
+            name_link = self._find_all_and_join_text(person, "nameLink")
+            role_name = self._find_all_and_join_text(person, "roleName")
         elif authedit.text:
             surname = authedit.text.strip()
         else:
-            forename = self._find_all_and_join_text(authedit, "forename")
+            first_name = self._find_all_and_join_text(
+                authedit, "forename[@type='first']"
+            )
+            middle_name = self._find_all_and_join_text(
+                authedit, "forename[@type='middle']"
+            )
             surname = self._find_all_and_join_text(authedit, "surname")
+            name_link = self._find_all_and_join_text(authedit, "nameLink")
+            role_name = self._find_all_and_join_text(authedit, "roleName")
 
-        if forename or surname:
-            return Person(forename=forename, surname=surname)
+        person = Person(
+            first_name=first_name,
+            middle_name=middle_name,
+            surname=surname,
+            name_link=name_link,
+            role_name=role_name,
+        )
 
-        return None
+        if person == Person():
+            return None
+
+        return person
 
     def _find_organization(self, authedit: etree._Element) -> Optional[Organization]:
         organization = self._find_all_and_join_text(authedit, "orgName")
@@ -409,12 +435,25 @@ class TeiBiblStruct:
 
     def _add_person(self, person: Person, authitor: etree._Element):
         persName = etree.SubElement(authitor, "persName")
-        if person.forename is not None:
-            forename = etree.SubElement(persName, "forename")
-            forename.text = person.forename
+        if person.first_name is not None:
+            first_name = etree.SubElement(
+                persName, "forename", attrib={"type": "first"}
+            )
+            first_name.text = person.first_name
+        if person.middle_name is not None:
+            middle_name = etree.SubElement(
+                persName, "forename", attrib={"type": "middle"}
+            )
+            middle_name.text = person.middle_name
         if person.surname is not None:
             surname = etree.SubElement(persName, "surname")
             surname.text = person.surname
+        if person.name_link is not None:
+            name_link = etree.SubElement(persName, "nameLink")
+            name_link.text = person.name_link
+        if person.role_name is not None:
+            role_name = etree.SubElement(persName, "roleName")
+            role_name.text = person.role_name
 
     def _add_organization(self, organization: Organization, authitor: etree._Element):
         orgName = etree.SubElement(authitor, "orgName")

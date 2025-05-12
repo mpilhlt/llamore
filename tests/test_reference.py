@@ -7,7 +7,7 @@ def test_reference():
         """{"authors": [{"forename": "forename  check\\t", "surname": "surname"}]}"""
     )
     assert Reference.model_validate_json(json_str).authors == [
-        Person(forename="forename check", surname="surname")
+        Person(first_name="forename check", surname="surname")
     ]
 
     json_str = """{"date": "", "analytic_title": "title"}"""
@@ -20,12 +20,12 @@ def test_reference():
 
 
 def test_authitor():
-    p = Person(forename="", surname="Check")
-    assert p.forename is None
+    p = Person(first_name="", surname="Check")
+    assert p.first_name is None
     assert p.surname == "Check"
 
-    p = Person(forename="Check\t", surname="")
-    assert p.forename == "Check"
+    p = Person(first_name="Check\t", surname="")
+    assert p.first_name == "Check"
     assert p.surname is None
 
     o = Organization(name=" GmbH\t")
@@ -47,7 +47,7 @@ def test_references_to_xml(tmpdir_factory):
         [
             Reference(
                 analytic_title="Article Title",
-                authors=[Person(forename="John", surname="Doe")],
+                authors=[Person(first_name="John", surname="Doe")],
                 journal_title="Journal Name",
                 publication_date="2023",
             ),
