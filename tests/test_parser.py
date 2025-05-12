@@ -2,6 +2,7 @@ import pytest
 from llamore.parser import TeiBiblStruct
 from llamore.reference import Organization, Person, Reference
 from lxml.etree import Element, SubElement, _Element
+from lxml import etree
 
 
 @pytest.mark.skip("Wait for the new gold data to be commited")
@@ -99,16 +100,21 @@ class TestFindPersonsAndOrganizations:
         biblStruct = Element("biblStruct")
         return SubElement(biblStruct, request.param)
 
-    def test_std(self, parser: TeiBiblStruct, authitor: _Element):
+    @pytest.mark.parametrize("with_or_without_type", ["with", "without"])
+    def test_std(self, parser: TeiBiblStruct, authitor: _Element, with_or_without_type: str):
         persName = SubElement(authitor, "persName")
-        forename = SubElement(persName, "forename")
-        forename.text = "John"
+        if with_or_without_type == "with":
+            first_name = SubElement(persName, "forename", attrib={"type": "first"})
+        else:
+            first_name = SubElement(persName, "forename")
+        first_name.text = "John"
         surname = SubElement(persName, "surname")
         surname.text = "Wayne"
 
-        assert parser._find_persons_and_organizations(
+        person = parser._find_persons_and_organizations(
             authitor.getparent(), author_or_editor=authitor.tag
-        ) == [Person(first_name="John", surname="Wayne")]
+        )
+        assert person == [Person(first_name="John", surname="Wayne")]
 
     def test_raw(self, parser: TeiBiblStruct, authitor: _Element):
         authitor.text = "John Wayne"
@@ -117,9 +123,13 @@ class TestFindPersonsAndOrganizations:
             authitor.getparent(), author_or_editor=authitor.tag
         ) == [Person(surname="John Wayne")]
 
-    def test_without_persName(self, parser: TeiBiblStruct, authitor: _Element):
-        forename = SubElement(authitor, "forename")
-        forename.text = "John"
+    @pytest.mark.parametrize("with_or_without_type", ["with", "without"])
+    def test_without_persName(self, parser: TeiBiblStruct, authitor: _Element, with_or_without_type: str):
+        if with_or_without_type == "with":
+            first_name = SubElement(authitor, "forename", attrib={"type": "first"})
+        else:
+            first_name = SubElement(authitor, "forename")
+        first_name.text = "John"
         surname = SubElement(authitor, "surname")
         surname.text = "Wayne"
 

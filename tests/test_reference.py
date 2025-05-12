@@ -4,10 +4,10 @@ from llamore.reference import Organization, Person, Reference, References
 
 def test_reference():
     json_str = (
-        """{"authors": [{"forename": "forename  check\\t", "surname": "surname"}]}"""
+        """{"authors": [{"first_name": "first_name  check\\t", "surname": "surname"}]}"""
     )
     assert Reference.model_validate_json(json_str).authors == [
-        Person(first_name="forename check", surname="surname")
+        Person(first_name="first_name check", surname="surname")
     ]
 
     json_str = """{"date": "", "analytic_title": "title"}"""
@@ -121,7 +121,7 @@ def test_references_from_xml():
 
     ref1 = references[0]
     assert ref1.analytic_title == "Article Title"
-    assert ref1.authors[0].forename == "John"
+    assert ref1.authors[0].first_name == "John"
     assert ref1.authors[0].surname == "Doe"
     assert ref1.journal_title == "Journal Name"
     assert ref1.publication_date == "2023"
