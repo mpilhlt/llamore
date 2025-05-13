@@ -92,7 +92,7 @@ It is based on the TEI biblStruct model and its JSON schema is the following:
     "Person": {
       "description": "Contains a proper noun or proper-noun phrase referring to a person, possibly including one or more of the person's forenames, surnames, honorifics, added names, etc.",
       "properties": {
-        "forename": {
+        "first_name": {
           "anyOf": [
             {
               "type": "string"
@@ -102,8 +102,21 @@ It is based on the TEI biblStruct model and its JSON schema is the following:
             }
           ],
           "default": null,
-          "description": "Contains a forename, given or baptismal name.",
-          "title": "Forename"
+          "description": "Contains a first name, given or baptismal name.",
+          "title": "First Name"
+        },
+        "middle_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Contains a middle name, written between a person's first and surname. It is often abbreviated.",
+          "title": "Middle Name"
         },
         "surname": {
           "anyOf": [
@@ -117,6 +130,32 @@ It is based on the TEI biblStruct model and its JSON schema is the following:
           "default": null,
           "description": "Contains a family (inherited) name of a person, as opposed to a given, baptismal, or nick name.",
           "title": "Surname"
+        },
+        "name_link": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Contains a connecting phrase or link used within a name but not regarded as part of it, such as 'van der' or 'of'.",
+          "title": "Name Link"
+        },
+        "role_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Contains a name component which indicates that the referent has a particular role or position in society, such as an official title or rank.",
+          "title": "Role Name"
         }
       },
       "title": "Person",
@@ -207,7 +246,7 @@ It is based on the TEI biblStruct model and its JSON schema is the following:
         }
       ],
       "default": null,
-      "description": "Contains a secondary statement of responsibility for a bibliographic item, for example the name of an individual, institution or organization, (or of several such) acting as editor, compiler, translator, etc.",
+      "description": "Contains a secondary statement of responsibility for a bibliographic item, for example the name of an individual, institution or organization, (or of several such) acting as editor, compiler, etc.",
       "title": "Editors"
     },
     "publisher": {
@@ -222,6 +261,18 @@ It is based on the TEI biblStruct model and its JSON schema is the following:
       "default": null,
       "description": "Contains the name of the organization responsible for the publication or distribution of a bibliographic item.",
       "title": "Publisher"
+    },
+    "translator": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Person"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Contains the name of the translator of a work."
     },
     "publication_date": {
       "anyOf": [
