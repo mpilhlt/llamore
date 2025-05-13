@@ -143,3 +143,9 @@ def test_reference_title():
     ref = Reference(analytic_title="test")
     assert ref.analytic_title is None
     assert ref.monographic_title == "test"
+
+
+def test_translator():
+    ref = Reference(translator=Person())
+
+    assert ref.translator is None
