@@ -13,7 +13,7 @@ def data() -> Tuple[List[Reference], List[Reference]]:
         Reference(
             analytic_title="at2",
             journal_title="jt",
-            authors=[Person(forename="first", surname="last2")],
+            authors=[Person(first_name="first", surname="last2")],
         )
     ]
 
@@ -22,7 +22,7 @@ def data() -> Tuple[List[Reference], List[Reference]]:
             analytic_title="at",
             journal_title="jt",
             authors=[
-                Person(forename="first", surname="last"),
+                Person(first_name="first", surname="last"),
                 Person(surname="last2"),
             ],
         ),
@@ -30,8 +30,8 @@ def data() -> Tuple[List[Reference], List[Reference]]:
             analytic_title="at2",
             journal_title="jt",
             authors=[
-                Person(forename="first", surname="last"),
-                Person(forename="first", surname="last2"),
+                Person(first_name="first", surname="last"),
+                Person(first_name="first", surname="last2"),
             ],
         ),
     ]
@@ -131,15 +131,15 @@ def test_count_stats_per_field():
         monographic_title="title",
         publication_date="time",
         authors=[
-            Person(forename="first", surname="last"),
-            Person(forename="first2", surname="last2"),
+            Person(first_name="first", surname="last"),
+            Person(first_name="first2", surname="last2"),
         ],
     )
     gold = Reference(
         monographic_title="title",
         journal_title="jt",
-        authors=[Person(forename="first", surname="last0"), Organization(name="org")],
-        editors=[Person(forename="first", surname="last")],
+        authors=[Person(first_name="first", surname="last0"), Organization(name="org")],
+        editors=[Person(first_name="first", surname="last")],
         publication_place="place",
     )
 
@@ -150,7 +150,7 @@ def test_count_stats_per_field():
         "Reference.journal_title": {"predictions": 0, "labels": 1, "matches": 0},
         "Reference.publication_date": {"predictions": 1, "labels": 0, "matches": 0},
         "Reference.publication_place": {"predictions": 0, "labels": 1, "matches": 0},
-        "Reference.authors.Person.forename": {
+        "Reference.authors.Person.first_name": {
             "predictions": 2,
             "labels": 1,
             "matches": 1,
@@ -165,7 +165,7 @@ def test_count_stats_per_field():
             "labels": 1,
             "matches": 0,
         },
-        "Reference.editors.Person.forename": {
+        "Reference.editors.Person.first_name": {
             "predictions": 0,
             "labels": 1,
             "matches": 0,
@@ -182,13 +182,13 @@ def test_compute_micro_average():
     ref = Reference(
         analytic_title="a",
         journal_title="jt",
-        authors=[Person(forename="a", surname="b"), Person(forename="b")],
+        authors=[Person(first_name="a", surname="b"), Person(first_name="b")],
     )
 
     gold = Reference(
         analytic_title="a",
         journal_title="jt2",
-        authors=[Person(forename="a", surname="b"), Person(forename="a", surname="d")],
+        authors=[Person(first_name="a", surname="b"), Person(first_name="a", surname="d")],
     )
 
     with pytest.raises(ValueError):
@@ -204,7 +204,7 @@ def test_compute_micro_average():
         },
         "Reference.analytic_title": {"recall": 1.0, "precision": 1.0, "f1": 1.0},
         "Reference.journal_title": {"recall": 0.0, "precision": 0.0, "f1": 0.0},
-        "Reference.authors.Person.forename": {
+        "Reference.authors.Person.first_name": {
             "recall": 0.5,
             "precision": 0.5,
             "f1": 0.5,
@@ -228,7 +228,7 @@ def test_compute_micro_average():
         },
         "Reference.analytic_title": {"recall": 1.0, "precision": 1.0, "f1": 1.0},
         "Reference.journal_title": {"recall": 1.0, "precision": 1.0, "f1": 1.0},
-        "Reference.authors.Person.forename": {
+        "Reference.authors.Person.first_name": {
             "recall": 1.0,
             "precision": 1.0,
             "f1": 1.0,

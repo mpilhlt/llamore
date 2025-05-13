@@ -8,14 +8,14 @@ def test_line_by_line_prompter():
         Reference(
             analytic_title="Analytic Title",
             authors=[
-                Person(forename="Forename", surname="Surname"),
-                Person(forename="Forename", surname="Surname"),
+                Person(first_name="Forename", surname="Surname"),
+                Person(first_name="Forename", surname="Surname"),
             ],
             volume="1",
         ),
         Reference(
             analytic_title="Analytic Title",
-            authors=[Person(forename="J", surname="Doe"), Person(surname="Surname")],
+            authors=[Person(first_name="J", surname="Doe"), Person(surname="Surname")],
             cited_range="2ff",
         ),
     ]
