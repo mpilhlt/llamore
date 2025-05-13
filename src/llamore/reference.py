@@ -21,6 +21,8 @@ def empty_to_none(value: Any) -> Optional[Any]:
         value == [] or value == () or value == [""] or value == ("",)
     ):
         return None
+    if isinstance(value, BaseModel) and value == type(value)():
+        return None
     return value
 
 
@@ -188,8 +190,7 @@ class Reference(BaseModel):
     ] = Field(
         None,
         description="Contains a secondary statement of responsibility for a bibliographic item, for example the name "
-        "of an individual, institution or organization, (or of several such) acting as editor, compiler, "
-        "translator, etc.",
+        "of an individual, institution or organization, (or of several such) acting as editor, compiler, etc.",
     )
     publisher: Optional[
         Annotated[
@@ -202,6 +203,15 @@ class Reference(BaseModel):
         None,
         description="Contains the name of the organization responsible for the publication or distribution of a "
         "bibliographic item.",
+    )
+    translator: Optional[
+        Annotated[
+            Person,
+            AfterValidator(empty_to_none),
+        ]
+    ] = Field(
+        None,
+        description="Contains the name of the translator of a work.",
     )
     publication_date: Optional[
         Annotated[

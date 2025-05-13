@@ -72,6 +72,7 @@ def test_to_from_xml(tmp_path_factory):
         publication_date="1978",
         publication_place="Moon",
         publisher="Mann im Mond",
+        translator=Person(first_name="t", surname="s"),
         pages="666",
         cited_range="666-9",
         volume="42",
@@ -144,6 +145,22 @@ class TestFindPersonsAndOrganizations:
         assert parser._find_persons_and_organizations(
             authitor.getparent(), author_or_editor=authitor.tag
         ) == [Organization(name="JohnWayne GmbH")]
+
+    def test_translator(self, parser: TeiBiblStruct):
+        biblStruct = Element("biblStruct")
+        editor = SubElement(biblStruct, "editor", attrib={"role": "translator"})
+        persName = SubElement(editor, "persName")
+        first_name = SubElement(persName, "forename", attrib={"type": "first"})
+        first_name.text = "John"
+        surname = SubElement(persName, "surname")
+        surname.text = "Wayne"
+
+        editors = parser._find_persons_and_organizations(biblStruct, author_or_editor="editor")
+        assert editors == []
+
+        translator = parser._find_translator(biblStruct)
+
+        assert translator == Person(first_name="John", surname="Wayne")
 
 
 def test_find_ref():

@@ -80,6 +80,7 @@ class TeiBiblStruct:
         )
         authors = self._find_persons_and_organizations(bibl_struct, "author")
         editors = self._find_persons_and_organizations(bibl_struct, "editor")
+        translator = self._find_translator(bibl_struct)
         publisher = self._find_all_and_join_text(bibl_struct, ".//publisher")
         publication_date = self._find_all_and_join_text(bibl_struct, ".//date")
         pages = self._find_scope(bibl_struct, "page")
@@ -101,6 +102,7 @@ class TeiBiblStruct:
             journal_title=journal_title,
             editors=editors,
             publisher=publisher,
+            translator=translator,
             publication_date=publication_date,
             publication_place=publication_place,
             volume=volume,
@@ -157,12 +159,24 @@ class TeiBiblStruct:
             f".//{author_or_editor}", namespaces=self._namespaces
         )
         for authedit in authors_or_editors:
+            # translators have their own field
+            if authedit.attrib.get("role") == "translator":
+                continue
             if person := self._find_person(authedit):
                 persons_and_organizations.append(person)
             if organization := self._find_organization(authedit):
                 persons_and_organizations.append(organization)
 
         return persons_and_organizations
+
+    def _find_translator(
+        self, element: etree._Element
+    ) -> Optional[Person]:
+        """Extract the translator from an Element."""
+        translator = element.find(".//editor[@role='translator']", namespaces=self._namespaces)
+        if translator is not None:
+            return self._find_person(translator)
+        return None
 
     def _find_person(self, authedit: etree._Element) -> Optional[Person]:
         first_name, middle_name, surname, name_link, role_name = (
@@ -368,6 +382,12 @@ class TeiBiblStruct:
                         monogr, reference.editors, "editor"
                     )
 
+                if reference.translator:
+                    monogr = self._get_or_add_subelement(bibl_struct, "monogr")
+                    self._add_persons_and_organizations(
+                        monogr, [reference.translator], "editor", attrib={"role": "translator"}
+                    )
+
                 if reference.publisher:
                     monogr = self._get_or_add_subelement(bibl_struct, "monogr")
                     imprint = self._get_or_add_subelement(monogr, "imprint")
@@ -428,9 +448,10 @@ class TeiBiblStruct:
         element: etree._Element,
         persons_and_organizations: List[Person | Organization],
         author_or_editor: Literal["author", "editor"] = "author",
+        attrib: Optional[Dict[str, str]] = None,
     ):
         for pers_or_orga in persons_and_organizations:
-            authitor = etree.SubElement(element, author_or_editor)
+            authitor = etree.SubElement(element, author_or_editor, attrib=attrib)
 
             if isinstance(pers_or_orga, Organization):
                 self._add_organization(pers_or_orga, authitor)
