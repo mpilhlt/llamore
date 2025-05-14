@@ -91,6 +91,33 @@ def test_to_from_xml(tmp_path_factory):
     assert reference == reader.from_xml(tmp_file)[0][0]
 
 
+def test_to_from_xml_for_pubPlace():
+    parser = TeiBiblStruct(namespaces=None)
+    ref = Reference(publication_place="Berlin,  Brandenburg")
+    xml_string = parser.to_xml(ref)
+
+    exptected = """<TEI>
+  <listBibl>
+    <biblStruct>
+      <monogr>
+        <imprint>
+          <date></date>
+          <pubPlace>Berlin</pubPlace>
+          <pubPlace>Brandenburg</pubPlace>
+        </imprint>
+      </monogr>
+    </biblStruct>
+  </listBibl>
+</TEI>
+"""
+    assert xml_string == exptected
+
+    ref2 = parser.from_xml(xml_str=xml_string)[0][0]
+    assert ref2 == ref
+
+
+
+
 class TestFindPersonsAndOrganizations:
     @pytest.fixture
     def parser(self) -> TeiBiblStruct:
