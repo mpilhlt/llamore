@@ -89,7 +89,7 @@ class TeiBiblStruct:
 
         cited_range = self._find_all_and_join_text(bibl_struct, ".//citedRange")
 
-        publication_place = self._find_all_and_join_text(bibl_struct, ".//pubPlace")
+        publication_place = self._find_all_and_join_text(bibl_struct, ".//pubPlace", separator=", ")
 
         footnote_number = bibl_struct.attrib.get("source", "")[2:]
 
@@ -235,7 +235,7 @@ class TeiBiblStruct:
         return None
 
     def _find_all_and_join_text(
-        self, element: etree._Element, tag: str
+        self, element: etree._Element, tag: str, separator: str = " "
     ) -> Optional[str]:
         elements = element.findall(tag, namespaces=self._namespaces)
         texts = []
@@ -244,7 +244,7 @@ class TeiBiblStruct:
                 texts.append(el.text)
 
         if texts:
-            return " ".join(texts).strip()
+            return separator.join(texts).strip()
         return None
 
     def from_xml(
@@ -403,8 +403,10 @@ class TeiBiblStruct:
                 if reference.publication_place:
                     monogr = self._get_or_add_subelement(bibl_struct, "monogr")
                     imprint = self._get_or_add_subelement(monogr, "imprint")
-                    pubPlace = etree.SubElement(imprint, "pubPlace")
-                    pubPlace.text = reference.publication_place
+                    for place in reference.publication_place.split(","):
+                        if place:
+                            pubPlace = etree.SubElement(imprint, "pubPlace")
+                            pubPlace.text = place.strip()
 
                 if reference.volume:
                     monogr = self._get_or_add_subelement(bibl_struct, "monogr")
