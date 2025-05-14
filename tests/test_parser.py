@@ -96,7 +96,7 @@ def test_to_from_xml_for_pubPlace():
     ref = Reference(publication_place="Berlin,  Brandenburg")
     xml_string = parser.to_xml(ref)
 
-    exptected = """<TEI>
+    expected = """<TEI>
   <listBibl>
     <biblStruct>
       <monogr>
