@@ -110,7 +110,7 @@ def test_to_from_xml_for_pubPlace():
   </listBibl>
 </TEI>
 """
-    assert xml_string == exptected
+    assert xml_string == expected
 
     ref2 = parser.from_xml(xml_str=xml_string)[0][0]
     assert ref2 == ref
