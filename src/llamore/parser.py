@@ -351,10 +351,10 @@ class TeiBiblStruct:
                     nsmap=self._namespaces,
                 )
                 analytic, monogr = None, None
-                if reference.analytic_title:
+                if reference.analytic_title or reference.journal_title:
                     analytic = etree.SubElement(bibl_struct, "analytic")
                     title = etree.SubElement(analytic, "title", attrib={"level": "a"})
-                    title.text = reference.analytic_title
+                    title.text = reference.analytic_title or ''
                     if reference.authors:
                         self._add_persons_and_organizations(
                             analytic, reference.authors, "author"
