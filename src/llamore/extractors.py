@@ -266,6 +266,9 @@ class GeminiExtractor:
             contents=contents,
             config=config,
         )
+        
+        if pdf:
+            self._client.files.delete(name=file.name)
 
         _LOGGER.debug(f"RESPONSE: {response}")
         references = self._prompter.parse(response.text)
