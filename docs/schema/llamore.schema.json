@@ -1,0 +1,315 @@
+{
+  "$defs": {
+    "Organization": {
+      "description": "Contains information about an identifiable organization such as a business, a tribe, or any other grouping of people.",
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Contains an organizational name.",
+          "title": "Name"
+        }
+      },
+      "title": "Organization",
+      "type": "object"
+    },
+    "Person": {
+      "description": "Contains a proper noun or proper-noun phrase referring to a person, possibly including one or more of the person's forenames, surnames, honorifics, added names, etc.",
+      "properties": {
+        "first_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Contains a first name, given or baptismal name.",
+          "title": "First Name"
+        },
+        "middle_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Contains a middle name, written between a person's first and surname. It is often abbreviated.",
+          "title": "Middle Name"
+        },
+        "surname": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Contains a family (inherited) name of a person, as opposed to a given, baptismal, or nick name.",
+          "title": "Surname"
+        },
+        "name_link": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Contains a connecting phrase or link used within a name but not regarded as part of it, such as 'van der' or 'of'.",
+          "title": "Name Link"
+        },
+        "role_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Contains a name component which indicates that the referent has a particular role or position in society, such as an official title or rank.",
+          "title": "Role Name"
+        }
+      },
+      "title": "Person",
+      "type": "object"
+    }
+  },
+  "description": "A reference based on the TEI biblstruct format.",
+  "properties": {
+    "analytic_title": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "This title applies to an analytic item, such as an article, poem, or other work published as part of a larger item.",
+      "title": "Analytic Title"
+    },
+    "monographic_title": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "This title applies to a monograph such as a book or other item considered to be a distinct publication, including single volumes of multi-volume works.",
+      "title": "Monographic Title"
+    },
+    "journal_title": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "This title applies to any serial or periodical publication such as a journal, magazine, or newspaper.",
+      "title": "Journal Title"
+    },
+    "authors": {
+      "anyOf": [
+        {
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Person"
+              },
+              {
+                "$ref": "#/$defs/Organization"
+              }
+            ]
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Contains the name or names of the authors, personal or corporate, of a work; for example in the same form as that provided by a recognized bibliographic name authority.",
+      "title": "Authors"
+    },
+    "editors": {
+      "anyOf": [
+        {
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Person"
+              },
+              {
+                "$ref": "#/$defs/Organization"
+              }
+            ]
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Contains a secondary statement of responsibility for a bibliographic item, for example the name of an individual, institution or organization, (or of several such) acting as editor, compiler, etc.",
+      "title": "Editors"
+    },
+    "publisher": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Contains the name of the organization responsible for the publication or distribution of a bibliographic item.",
+      "title": "Publisher"
+    },
+    "translator": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Person"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Contains the name of the translator of a work."
+    },
+    "publication_date": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Contains the date of publication in any format.",
+      "title": "Publication Date"
+    },
+    "publication_place": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Contains the name of the place where a bibliographic item was published.",
+      "title": "Publication Place"
+    },
+    "volume": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Defines the scope of a bibliographic reference in terms of the volume of a larger work.",
+      "title": "Volume"
+    },
+    "issue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Defines the scope of a bibliographic reference in terms of an issue number, or issue numbers.",
+      "title": "Issue"
+    },
+    "pages": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Defines the scope of a bibliographic reference in terms of page numbers.",
+      "title": "Pages"
+    },
+    "cited_range": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Defines the range of cited content, often represented by pages or other units.",
+      "title": "Cited Range"
+    },
+    "footnote_number": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Contains the number of the footnote in which the reference occurs.",
+      "title": "Footnote Number"
+    },
+    "refs": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Defines references to another location, possibly modified by additional text or comment. ",
+      "title": "Refs"
+    }
+  },
+  "title": "Reference",
+  "type": "object"
+}
