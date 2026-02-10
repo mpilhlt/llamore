@@ -18,13 +18,10 @@ jobs:
               with:
                   version: "0.6.10"
 
-            - name: Set up Pyhon
+            - name: Set up Python
               uses: actions/setup-python@v5
               with:
-                  python-version-file: "pyproject.toml"
-
-            - name: Install system dependencies
-              run: sudo apt-get update && sudo apt-get install -y libxml2-dev libxslt-dev
+                  python-version: "3.12"
 
             - name: Install llamore
               run: uv sync --all-extras
