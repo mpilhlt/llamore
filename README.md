@@ -68,5 +68,5 @@ You can also have a look at the [quick start notebook](notebooks/quick_start.ipy
 Llamore internally defines a reference via a pydantic BaseModel in `llamore.reference.Reference`.
 It is based on the TEI biblStruct model. Schema files are published on this repository's GitHub page:
 
-- JSON schema: [Code](./docs/schema/llamore.schema.json) | [Download](https://mpilhlt.github.io/llamore/schema/llamore.schema.json)
+- JSON schema: [Documentation](https://json-schema.app/view/%23?url=https%3A%2F%2Fraw.githubusercontent.com%2Fmpilhlt%2Fllamore%2Frefs%2Fheads%2Fmain%2Fdocs%2Fschema%2Fllamore.schema.json) | [Code](./docs/schema/llamore.schema.json) | [Download](https://mpilhlt.github.io/llamore/schema/llamore.schema.json)
 - Relax NG schema: [Code](./docs/schema/llamore.rng) | [Download](https://mpilhlt.github.io/llamore/schema/llamore.rng)
