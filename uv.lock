@@ -987,7 +987,7 @@ dev = [
 requires-dist = [
     { name = "fastapi", marker = "extra == 'api'", specifier = ">=0.129.0" },
     { name = "google-genai", specifier = ">=1.8.0" },
-    { name = "lxml", specifier = ">=5.3.1" },
+    { name = "lxml", specifier = "==5.3.1" },
     { name = "numpy", specifier = ">=2.2.3" },
     { name = "openai", specifier = ">=1.68.2" },
     { name = "pydantic", specifier = ">=2.10.6" },
