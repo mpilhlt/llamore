@@ -14,7 +14,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
-            
+
             - name: Install system dependencies
               run: sudo apt-get update && sudo apt-get install -y libxml2-dev libxslt-dev
         
@@ -73,10 +73,10 @@ jobs:
                   HF_TOKEN: ${{ secrets.HF_TOKEN }}
               run: |
                   cd api
-                  git init
+                  git init -b main
                   git config user.email "ci@github"
                   git config user.name "CI"
-                  git remote add hf https://user:$HF_TOKEN@hf.co/spaces/Llamore/api
+                  git remote add hf https://Llamore:$HF_TOKEN@huggingface.co/spaces/Llamore/api
                   git add .
                   git commit -m "deploy from $GITHUB_SHA"
                   git push hf main --force
