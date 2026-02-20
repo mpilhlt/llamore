@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import Depends, FastAPI, File, HTTPException, Request, Security, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.security import APIKeyHeader
+
 from llamore import (
     F1,
     GeminiExtractor,
@@ -23,7 +24,7 @@ from pydantic import BaseModel, Field
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler(), logging.FileHandler("./logs/llamore-api.log")],
+    handlers=[logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
 
@@ -167,9 +168,6 @@ async def root():
         "endpoints": {
             "extract_text": "/extract/text",
             "extract_pdf": "/extract/pdf",
-            "to_xml": "/references/to-xml",
-            "from_xml": "/references/from-xml",
-            "f1_metrics": "/metrics/f1",
             "health": "/health",
         },
     }
@@ -206,7 +204,6 @@ async def extract_from_text(
         references=references_to_dict(references), count=len(references)
     )
 
-
 @app.post("/extract/pdf", response_model=ReferencesResponse)
 async def extract_from_pdf(
     file: UploadFile = File(...),
@@ -215,96 +212,33 @@ async def extract_from_pdf(
     model: Optional[str] = None,
     prompter_type: str = "schema",
     step_by_step: bool = False,
-    api_key: str = Depends(verify_api_key),
+    api_key: str = Depends(verify_api_key)
 ):
-    if not file.filename or not file.filename.lower().endswith(".pdf"):
+    if not file.filename or not file.filename.lower().endswith('.pdf'):
         raise api_error("A valid .pdf file is required")
 
+    content = await file.read()
+    if not content:
+        raise api_error("Uploaded file is empty")
+
     try:
-        content = await file.read()
-        if not content:
-            raise api_error("Uploaded file is empty")
-
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        with tempfile.NamedTemporaryFile(delete=True, suffix='.pdf', dir='/tmp') as tmp:
             tmp.write(content)
+            tmp.flush()  # ensure bytes are written before extractor reads it
             tmp_path = Path(tmp.name)
-
-        try:
-            extractor = create_extractor(
-                provider, provider_api_key, model, prompter_type, step_by_step
-            )
-            references = extractor(pdf=tmp_path)
-        finally:
-            tmp_path.unlink(missing_ok=True)
+            
+            try:
+                extractor = create_extractor(provider, provider_api_key, model, prompter_type, step_by_step)
+                references = extractor(pdf=tmp_path)
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise api_error(f"PDF extraction failed: {e}")
 
     except HTTPException:
         raise
     except Exception as e:
-        raise api_error(f"PDF extraction failed: {e}")
+        raise api_error(f"PDF handling failed: {e}")
 
     logger.info(f"Extracted {len(references)} references from {file.filename}")
-    return ReferencesResponse(
-        references=references_to_dict(references), count=len(references)
-    )
-
-
-@app.post("/references/to-xml", response_model=XMLResponse)
-async def convert_to_xml(request: ToXMLRequest, api_key: str = Depends(verify_api_key)):
-    if not request.references:
-        raise api_error("No references provided")
-    try:
-        xml_str = dict_to_references(request.references).to_xml(
-            pretty_print=request.pretty_print
-        )
-    except Exception as e:
-        raise api_error(f"XML conversion failed: {e}")
-    return XMLResponse(xml=xml_str)
-
-
-@app.post("/references/from-xml", response_model=ReferencesResponse)
-async def convert_from_xml(
-    request: FromXMLRequest, api_key: str = Depends(verify_api_key)
-):
-    if not request.xml or not request.xml.strip():
-        raise api_error("No XML content provided")
-    try:
-        references = References.from_xml(xml_str=request.xml)
-    except Exception as e:
-        raise api_error(f"XML parsing failed: {e}")
-    return ReferencesResponse(
-        references=references_to_dict(references), count=len(references)
-    )
-
-
-@app.post("/metrics/f1", response_model=F1Response)
-async def compute_f1_metrics(
-    request: F1Request, api_key: str = Depends(verify_api_key)
-):
-    if len(request.predictions) != len(request.labels):
-        raise api_error(
-            f"Predictions and labels length mismatch: {len(request.predictions)} vs {len(request.labels)}"
-        )
-    if request.metric_type not in ("macro", "micro"):
-        raise api_error(
-            f"Invalid metric_type '{request.metric_type}'. Use 'macro' or 'micro'"
-        )
-
-    try:
-        predictions = [
-            dict_to_references(prediction) for prediction in request.predictions
-        ]
-        labels = [dict_to_references(label) for label in request.labels]
-        f1 = F1(levenshtein_distance=request.levenshtein_distance)
-
-        if request.metric_type == "macro":
-            return F1Response(
-                score=f1.compute_macro_average(predictions, labels, show_progress=False)
-            )
-        else:
-            return F1Response(
-                metrics=f1.compute_micro_average(
-                    predictions, labels, show_progress=False
-                )
-            )
-    except Exception as e:
-        raise api_error(f"F1 computation failed: {e}")
+    return ReferencesResponse(references=references_to_dict(references), count=len(references))

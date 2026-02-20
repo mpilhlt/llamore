@@ -7,6 +7,7 @@ on:
         branches: [ main ]
     release:
         types: [ published ]
+    workflow_dispatch:
 
 jobs:
     tests:
@@ -56,3 +57,40 @@ jobs:
 
             - name: Publish package
               run: uv publish --trusted-publishing always
+
+    deploy-api:
+        runs-on: ubuntu-latest
+        if: |
+            (github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.modified, 'api/'))
+            || github.event_name == 'workflow_dispatch'
+        needs: tests
+        steps:
+            - uses: actions/checkout@v4
+            - name: Push api to HF Space
+              env:
+                  HF_TOKEN: ${{ secrets.HF_TOKEN }}
+              run: |
+                  cd api
+                  git init
+                  git config user.email "ci@github"
+                  git config user.name "CI"
+                  git remote add hf https://user:$HF_TOKEN@hf.co/spaces/Llamore/api
+                  git add .
+                  git commit -m "deploy from $GITHUB_SHA"
+                  git push hf main --force
+
+    rebuild-hf:
+        runs-on: ubuntu-latest
+        needs: [tests, deploy-api]
+        if: |
+            needs.tests.result == 'success' &&
+            ((github.event_name == 'push' && github.ref == 'refs/heads/main')
+            || github.event_name == 'workflow_dispatch')
+        steps:
+            - name: Trigger HF Space rebuild
+              env:
+                  HF_TOKEN: ${{ secrets.HF_TOKEN }}
+              run: |
+                  curl -X POST \
+                    "https://huggingface.co/api/spaces/Llamore/api/restart?factory=true" \
+                    -H "Authorization: Bearer $HF_TOKEN"
