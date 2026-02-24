@@ -62,37 +62,43 @@ jobs:
 
     deploy-api:
         runs-on: ubuntu-latest
-        if: |
-            (github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.modified, 'api/'))
-            || github.event_name == 'workflow_dispatch'
+        environment: hf
         needs: tests
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         steps:
-            - uses: actions/checkout@v4
-            - name: Push api to HF Space
-              env:
-                  HF_TOKEN: ${{ secrets.HF_TOKEN }}
-              run: |
-                  cd api
-                  git init -b main
-                  git config user.email "ci@github"
-                  git config user.name "CI"
-                  git remote add hf https://Llamore:$HF_TOKEN@huggingface.co/spaces/Llamore/api
-                  git add .
-                  git commit -m "deploy from $GITHUB_SHA"
-                  git push hf main --force
+          - uses: actions/checkout@v4
+    
+          - name: Push api/ to HF Space
+            env:
+              HF_TOKEN: ${{ secrets.HF_TOKEN }}
+            run: |
+              cd api
+              git init -b main
+              git config user.email "ci@github"
+              git config user.name "CI"
+              git remote add hf https://huggingface.co/spaces/Llamore/api
+              git add .
+              if git diff --cached --quiet; then
+                echo "No changes to deploy — skipping push."
+                exit 0
+              fi
+              git commit -m "deploy from ${GITHUB_SHA}"
+              git -c http.extraheader="Authorization: Bearer ${HF_TOKEN}" push hf main --force
 
     rebuild-hf:
         runs-on: ubuntu-latest
+        environment: hf
         needs: [tests, deploy-api]
         if: |
-            needs.tests.result == 'success' &&
-            ((github.event_name == 'push' && github.ref == 'refs/heads/main')
-            || github.event_name == 'workflow_dispatch')
+          always()
+          && (needs.tests.result == 'success'
+          || needs.deploy-api.result == 'success'
+          || github.event_name == 'workflow_dispatch')
         steps:
-            - name: Trigger HF Space rebuild
-              env:
-                  HF_TOKEN: ${{ secrets.HF_TOKEN }}
-              run: |
-                  curl -X POST \
-                    "https://huggingface.co/api/spaces/Llamore/api/restart?factory=true" \
-                    -H "Authorization: Bearer $HF_TOKEN"
+          - name: Trigger HF Space rebuild
+            env:
+              HF_TOKEN: ${{ secrets.HF_TOKEN }}
+            run: |
+              curl --fail -X POST \
+                "https://huggingface.co/api/spaces/Llamore/api/restart?factory=true" \
+                -H "Authorization: Bearer ${HF_TOKEN}"
