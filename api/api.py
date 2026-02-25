@@ -4,7 +4,7 @@ import tempfile
 import traceback
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Literal
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, Security, UploadFile
 from fastapi.responses import JSONResponse
@@ -40,7 +40,7 @@ def api_error(detail: str, status_code: int = 400) -> HTTPException:
 
 
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
-
+provider_key_header = APIKeyHeader(name="X-Provider-Key", auto_error=False)
 
 async def verify_api_key(api_key: str = Security(api_key_header)):
     if not api_key or api_key != ALLOWED_API_KEY:
@@ -74,68 +74,87 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=500, content={"error": str(exc), "type": type(exc).__name__}
     )
 
+# ===== Base Request and Response Classes =====
 
-# Request/Response Models
-class ExtractTextRequest(BaseModel):
-    text: str = Field(..., description="Text to extract references from")
-    provider: str = Field("gemini", description="LLM provider: 'openai' or 'gemini'")
-    provider_api_key: str = Field(..., description="API key for the LLM provider")
-    model: Optional[str] = Field(None, description="Model name")
-    prompter_type: str = Field("schema", description="'schema' or 'line_by_line'")
+class ExtractionConfig(BaseModel):
+    """Common extraction configuration options."""
+    
+    provider: Literal["openai", "gemini"] = Field(
+        "gemini", 
+        description="LLM provider to use for extraction"
+    )
+    model: Optional[str] = Field(
+        None, 
+        description="Model name. Defaults to gemini-2.5-flash for Gemini, gpt-4o for OpenAI"
+    )
+    prompter_type: Literal["schema", "line_by_line"] = Field(
+        "schema", 
+        description="Prompter type for extraction"
+    )
     step_by_step: bool = Field(
-        False, description="Step-by-step extraction (schema only)"
+        False, 
+        description="Enable step-by-step extraction (only for schema prompter)"
     )
+    
     additional_instructions: Optional[str] = Field(
-        None, description="Additional instructions"
+        None, 
+        description="Additional instructions for the extractor"
     )
 
+    return_xml: bool = Field(
+        False,
+        description="Convert extracted references to TEI XML format in response"
+    )
+
+
+# ===== Response Classes =====
 
 class ReferencesResponse(BaseModel):
-    references: List[Dict[str, Any]]
-    count: int
-
-
-class ToXMLRequest(BaseModel):
-    references: List[Dict[str, Any]]
-    pretty_print: bool = Field(True)
-
-
-class XMLResponse(BaseModel):
-    xml: str
-
-
-class FromXMLRequest(BaseModel):
-    xml: str
-
-
-class F1Request(BaseModel):
-    predictions: List[List[Dict[str, Any]]]
-    labels: List[List[Dict[str, Any]]]
-    levenshtein_distance: int | float = Field(0)
-    metric_type: str = Field("macro", description="'macro' or 'micro'")
-
-
-class F1Response(BaseModel):
-    score: Optional[float] = None
-    metrics: Optional[Dict[str, Any]] = None
+    """Response containing extracted references and optional XML."""
+    
+    references: List[Dict[str, Any]] = Field(
+        ...,
+        description="List of extracted references"
+    )
+    xml: Optional[str] = Field(
+        None,
+        description="TEI XML representation of references (only if return_xml=True)"
+    )
 
 
 # Utility functions
 def create_extractor(
-    provider: str,
+    provider: Literal["openai", "gemini"],
     provider_api_key: str,
     model: Optional[str],
-    prompter_type: str,
+    prompter_type: Literal["schema", "line_by_line"],
     step_by_step: bool = False,
 ):
+    """Create an extractor instance based on provider and configuration.
+    
+    Args:
+        provider: The LLM provider (openai or gemini)
+        provider_api_key: API key for the provider
+        model: Model name (optional, uses defaults if not specified)
+        prompter_type: Type of prompter to use (schema or line_by_line)
+        step_by_step: Enable step-by-step extraction (schema only)
+    
+    Returns:
+        An extractor instance (OpenaiExtractor or GeminiExtractor)
+    
+    Raises:
+        HTTPException: If provider is unsupported or API key is invalid
+    """
+    
     if not provider_api_key or not provider_api_key.strip():
         raise api_error(f"API key required for provider '{provider}'")
-
-    prompter = (
-        LineByLinePrompter()
-        if prompter_type == "line_by_line"
-        else SchemaPrompter(step_by_step=step_by_step)
-    )
+    
+    if prompter_type == "line_by_line":
+        prompter = LineByLinePrompter()
+    elif prompter_type == "schema":
+        prompter = SchemaPrompter(step_by_step=step_by_step)
+    else:
+        raise api_error(f"Unsupported prompter type '{prompter_type}'. Use 'schema' or 'line_by_line'")
 
     if provider == "openai":
         return OpenaiExtractor(
@@ -153,11 +172,6 @@ def create_extractor(
 
 def references_to_dict(references: References) -> List[Dict[str, Any]]:
     return [ref.model_dump(exclude_none=True) for ref in references]
-
-
-def dict_to_references(refs_dict: List[Dict[str, Any]]) -> References:
-    return References([Reference(**ref) for ref in refs_dict])
-
 
 # Endpoints
 @app.get("/")
@@ -177,10 +191,20 @@ async def root():
 async def health_check():
     return {"status": "healthy", "service": "llamore-api"}
 
+class ExtractTextRequest(ExtractionConfig):
+    """Request to extract references from plain text."""
+    
+    text: str = Field(
+        ..., 
+        min_length=1,
+        description="Text to extract references from"
+    )
 
 @app.post("/extract/text", response_model=ReferencesResponse)
 async def extract_from_text(
-    request: ExtractTextRequest, api_key: str = Depends(verify_api_key)
+    request: ExtractTextRequest,
+    provider_api_key: str = Security(provider_key_header),
+    api_key: str = Depends(verify_api_key)
 ):
     if not request.text.strip():
         raise api_error("Text cannot be empty")
@@ -188,32 +212,59 @@ async def extract_from_text(
     try:
         extractor = create_extractor(
             request.provider,
-            request.provider_api_key,
+            provider_api_key,
             request.model,
             request.prompter_type,
             request.step_by_step,
         )
-        references = extractor(text=request.text)
+        references = extractor(text=request.text, additional_instructions=request.additional_instructions)
     except HTTPException:
         raise
     except Exception as e:
         raise api_error(f"Extraction failed: {e}")
 
     logger.info(f"Extracted {len(references)} references from text")
-    return ReferencesResponse(
-        references=references_to_dict(references), count=len(references)
-    )
+    
+    response_data = {
+        "references": references_to_dict(references),
+        "xml": None
+    }
+    
+    if request.return_xml and references:
+        try:
+            response_data["xml"] = references.to_xml(pretty_print=True)
+        except Exception as e:
+            # Don't fail the whole request, just omit the XML
+            logger.warning(f"Failed to convert references to XML: {e}")
+    
+    return ReferencesResponse(**response_data)
+    
+
+class ExtractPdfRequest(ExtractionConfig):
+    """Request to extract references from a PDF file.
+    
+    Note: The file itself is passed as form data via UploadFile.
+    """
+    file: UploadFile = Field(..., description="PDF file to extract references from")
+
 
 @app.post("/extract/pdf", response_model=ReferencesResponse)
 async def extract_from_pdf(
-    file: UploadFile = File(...),
-    provider: str = "gemini",
-    provider_api_key: str = "",
-    model: Optional[str] = None,
-    prompter_type: str = "schema",
-    step_by_step: bool = False,
+    request: ExtractPdfRequest = Depends(),
+    provider_api_key: str = Security(provider_key_header),
     api_key: str = Depends(verify_api_key)
 ):
+    """Extract references from a PDF file.
+    
+    Args:
+        request: ExtractPdfRequest containing file and extraction parameters
+        provider_api_key: LLM provider API key from X-Provider-Key header
+        api_key: Verified API key from X-API-Key header
+    
+    Returns:
+        ReferencesResponse with extracted references and optional XML
+    """
+    file = request.file
     if not file.filename or not file.filename.lower().endswith('.pdf'):
         raise api_error("A valid .pdf file is required")
 
@@ -222,18 +273,30 @@ async def extract_from_pdf(
         raise api_error("Uploaded file is empty")
 
     try:
-        with tempfile.NamedTemporaryFile(delete=True, suffix='.pdf', dir='/tmp') as tmp:
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf', dir='/tmp') as tmp:
             tmp.write(content)
-            tmp.flush()  # ensure bytes are written before extractor reads it
+            tmp.flush()
             tmp_path = Path(tmp.name)
             
             try:
-                extractor = create_extractor(provider, provider_api_key, model, prompter_type, step_by_step)
+                extractor = create_extractor(
+                    request.provider, 
+                    provider_api_key,
+                    request.model, 
+                    request.prompter_type, 
+                    request.step_by_step
+                )
                 references = extractor(pdf=tmp_path)
             except HTTPException:
                 raise
             except Exception as e:
                 raise api_error(f"PDF extraction failed: {e}")
+            finally:
+                # Clean up temp file
+                try:
+                    tmp_path.unlink()
+                except Exception as cleanup_error:
+                    logger.warning(f"Failed to clean up temporary file: {cleanup_error}")
 
     except HTTPException:
         raise
@@ -241,4 +304,17 @@ async def extract_from_pdf(
         raise api_error(f"PDF handling failed: {e}")
 
     logger.info(f"Extracted {len(references)} references from {file.filename}")
-    return ReferencesResponse(references=references_to_dict(references), count=len(references))
+    
+    response_data = {
+        "references": references_to_dict(references),
+        "xml": None
+    }
+    
+    if request.return_xml and references:
+        try:
+            response_data["xml"] = references.to_xml(pretty_print=True)
+        except Exception as e:
+            logger.warning(f"Failed to convert references to XML: {e}")
+            # Don't fail the whole request, just omit the XML
+    
+    return ReferencesResponse(**response_data)
