@@ -76,14 +76,14 @@ jobs:
               git init -b main
               git config user.email "ci@github"
               git config user.name "CI"
-              git remote add hf https://huggingface.co/spaces/Llamore/api
+              git remote add hf https://user:${HF_TOKEN}@huggingface.co/spaces/Llamore/api
               git add .
               if git diff --cached --quiet; then
                 echo "No changes to deploy — skipping push."
                 exit 0
               fi
               git commit -m "deploy from ${GITHUB_SHA}"
-              git -c http.extraheader="Authorization: Bearer ${HF_TOKEN}" push hf main --force
+              git push hf main --force
 
     rebuild-hf:
         runs-on: ubuntu-latest
