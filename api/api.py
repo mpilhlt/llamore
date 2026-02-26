@@ -311,7 +311,7 @@ async def extract_from_pdf(
         try:
             response_data["xml"] = references.to_xml(pretty_print=True)
         except Exception as e:
-            logger.warning(f"Failed to convert references to XML: {e}")
             # Don't fail the whole request, just omit the XML
+            logger.warning(f"Failed to convert references to XML: {e}")
 
     return ReferencesResponse(**response_data)
