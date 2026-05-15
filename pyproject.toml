@@ -28,6 +28,13 @@ dependencies = [
 [project.urls]
 Repository = "https://github.com/mpilhlt/llamore" 
 
+[project.optional-dependencies]
+api = [
+    "fastapi>=0.129.0",
+    "python-multipart>=0.0.22",
+    "uvicorn[standard]>=0.41.0",
+]
+
 [tool.pytest.ini_options]
 
 [tool.ruff.lint]

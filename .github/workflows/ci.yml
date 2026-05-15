@@ -14,6 +14,10 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
+
+            - name: Install system dependencies
+              run: sudo apt-get update && sudo apt-get install -y libxml2-dev libxslt-dev
+        
             - name: Install uv
               uses: astral-sh/setup-uv@v5
               with:
@@ -55,3 +59,46 @@ jobs:
 
             - name: Publish package
               run: uv publish --trusted-publishing always
+
+    deploy-api:
+        runs-on: ubuntu-latest
+        environment: hf
+        needs: tests
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+        steps:
+          - uses: actions/checkout@v4
+    
+          - name: Push api/ to HF Space
+            env:
+              HF_TOKEN: ${{ secrets.HF_TOKEN }}
+            run: |
+              cd api
+              git init -b main
+              git config user.email "ci@github"
+              git config user.name "CI"
+              git remote add hf https://user:${HF_TOKEN}@huggingface.co/spaces/Llamore/api
+              git add .
+              if git diff --cached --quiet; then
+                echo "No changes to deploy — skipping push."
+                exit 0
+              fi
+              git commit -m "deploy from ${GITHUB_SHA}"
+              git push hf main --force
+
+    rebuild-hf:
+        runs-on: ubuntu-latest
+        environment: hf
+        needs: [tests, deploy-api]
+        if: |
+          always()
+          && (needs.tests.result == 'success'
+          || needs.deploy-api.result == 'success'
+          || github.event_name == 'workflow_dispatch')
+        steps:
+          - name: Trigger HF Space rebuild
+            env:
+              HF_TOKEN: ${{ secrets.HF_TOKEN }}
+            run: |
+              curl --fail -X POST \
+                "https://huggingface.co/api/spaces/Llamore/api/restart?factory=true" \
+                -H "Authorization: Bearer ${HF_TOKEN}"
