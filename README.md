@@ -70,3 +70,5 @@ It is based on the TEI biblStruct model. Schema files are published on this repo
 
 - JSON schema: [Documentation](https://json-schema.app/view/%23?url=https%3A%2F%2Fraw.githubusercontent.com%2Fmpilhlt%2Fllamore%2Frefs%2Fheads%2Fmain%2Fdocs%2Fschema%2Fllamore.schema.json) | [Code](./docs/schema/llamore.schema.json) | [Download](https://mpilhlt.github.io/llamore/schema/llamore.schema.json)
 - Relax NG schema: [Code](./docs/schema/llamore.rng) | [Download](https://mpilhlt.github.io/llamore/schema/llamore.rng)
+
+The Relax NG schema (`llamore-default.rng`, aliased as `llamore.rng`) is hand-written. It validates LLamore's TEI output: a `teiHeader` (taken over from the [FOSSIL GROBID training schema](https://mpilhlt.github.io/fossil/schema/grobid.training.references.rng)) and the extracted references as `<biblStruct>` elements in a `<listBibl>`, either inside `<standOff>` or directly below `<TEI>`.
